@@ -65,7 +65,6 @@
     @media (max-width:600px) { .popover-container, .picker-card { width:90%; padding:1.2rem; } .popover-options { flex-direction:column; gap:0.8rem; } .option-card { width:100%; } }
     .confirm-map-btn { background:#2c7da0; margin-top:0.5rem; }
 
-    /* New location display banner */
     .current-location-banner {
       background: #ffffff;
       border: 1px solid #e2e8f0;
@@ -425,9 +424,8 @@
     lonInput.value = lng.toFixed(6);
 
     const city = await reverseGeocode(lat, lng);
-    // Update the visible banner
     currentCityName.textContent = city || 'Unknown location';
-    currentCityName.title = city; // full name on hover if truncated
+    currentCityName.title = city;
 
     if (saveToStorage) {
       localStorage.setItem('noor_lat', lat);
@@ -439,16 +437,19 @@
     fullRefresh();
   }
 
+  // ====== UPDATED IP FALLBACK USING FREEIPAPI ======
   async function useIPFallback(shouldClosePopover = false) {
     showLoader(true, '🌐 Detecting location via IP...');
     try {
-      const resp = await fetch('https://ip-api.com/json/');
+      // FreeIPAPI – free, no key required
+      const resp = await fetch('https://free.freeipapi.com/api/json/');
       const data = await resp.json();
-      if (data.status === 'success' && data.lat && data.lon) {
-        await setLocation(data.lat, data.lon, true, true);
-        showToast(`📍 Location set via IP: ${data.city || data.regionName || 'Unknown'}`);
+      if (data.latitude && data.longitude) {
+        const city = data.cityName || data.regionName || 'Unknown';
+        await setLocation(data.latitude, data.longitude, true, true);
+        showToast(`📍 Location set via IP: ${city}`);
       } else {
-        throw new Error('IP API failed');
+        throw new Error('IP API incomplete');
       }
     } catch(e) {
       console.warn("IP fallback failed, using default Makkah");
@@ -544,7 +545,6 @@
     const savedLng = localStorage.getItem('noor_lng');
     const savedCity = localStorage.getItem('noor_city');
     if (savedLat && savedLng && !isNaN(parseFloat(savedLat))) {
-      // Show saved city immediately
       currentCityName.textContent = savedCity || 'Saved location';
       await setLocation(parseFloat(savedLat), parseFloat(savedLng), false, true);
     } else {
