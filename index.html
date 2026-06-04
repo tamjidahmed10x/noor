@@ -4,312 +4,101 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
   <title>Noor | Prayer Times — Umm al‑Qura · GPS & Map</title>
-  <!-- Google Fonts & Leaflet CSS -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      -webkit-tap-highlight-color: transparent;
-    }
+    * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+    body { background: linear-gradient(145deg, #f9fafc 0%, #eef2f7 100%); font-family:'Inter',sans-serif; min-height:100vh; color:#1e293b; }
+    .app-layout { max-width:1200px; margin:0 auto; padding:2rem; }
+    .header { text-align:center; margin-bottom:2rem; }
+    .header h1 { font-size:1.8rem; font-weight:700; background:linear-gradient(135deg, #0f2b3d, #1b4a6e); background-clip:text; -webkit-background-clip:text; color:transparent; display:inline-flex; align-items:center; gap:6px; }
+    .sub { font-size:0.75rem; color:#4b5563; margin-top:4px; }
+    .two-columns { display:flex; gap:2rem; align-items:flex-start; flex-wrap:wrap; }
+    .col-prayer { flex:0 0 45%; }
+    .col-settings { flex:1; min-width:280px; }
+    @media (max-width:768px) { .two-columns { flex-direction:column; } .col-prayer { flex:auto; width:100%; } .col-settings { width:100%; } .app-layout { padding:1rem; } }
 
-    body {
-      background: linear-gradient(145deg, #f9fafc 0%, #eef2f7 100%);
-      font-family: 'Inter', sans-serif;
-      min-height: 100vh;
-      color: #1e293b;
-    }
+    .glass-card, .settings-card { background:white; border-radius:1.75rem; padding:1.2rem; margin-bottom:1rem; box-shadow:0 8px 20px rgba(0,0,0,0.03), 0 2px 6px rgba(0,0,0,0.05); border:1px solid rgba(0,0,0,0.05); }
+    .section-title { font-size:1.1rem; font-weight:600; margin-bottom:1rem; border-left:4px solid #2c7da0; padding-left:12px; color:#0f2b3d; }
+    .next-prayer-banner { background:linear-gradient(105deg, #1a4b6e 0%, #0f3b57 100%); border-radius:1.5rem; padding:1.2rem; color:white; text-align:center; margin-bottom:1rem; }
+    .next-label { font-size:0.7rem; text-transform:uppercase; letter-spacing:2px; opacity:0.8; }
+    .next-name { font-size:1.8rem; font-weight:800; margin:0.2rem 0; }
+    .countdown { font-size:1.6rem; font-weight:700; font-family:monospace; background:rgba(255,255,255,0.2); display:inline-block; padding:0.2rem 1rem; border-radius:3rem; margin-top:0.5rem; }
+    .prayer-grid { display:grid; grid-template-columns:repeat(3, 1fr); gap:0.8rem; }
+    .prayer-card { background:#f8fafc; border-radius:1.2rem; padding:0.8rem 0.3rem; text-align:center; border:1px solid #e9edf2; }
+    .prayer-name { font-weight:700; font-size:0.8rem; color:#1e4a6e; text-transform:uppercase; }
+    .prayer-time { font-size:1.2rem; font-weight:700; font-family:monospace; margin-top:4px; }
+    .qibla-row { display:flex; justify-content:space-between; align-items:center; background:#f1f5f9; padding:0.7rem 1rem; border-radius:1.2rem; margin:0.8rem 0; }
+    .sunnah-info { font-size:0.75rem; background:#f1f5fc; border-radius:1rem; padding:0.6rem; text-align:center; }
+    .input-group { margin-bottom:1rem; }
+    label { font-size:0.7rem; font-weight:600; text-transform:uppercase; color:#2c7da0; display:block; margin-bottom:0.2rem; }
+    input, select { width:100%; padding:0.7rem 0.9rem; border-radius:1.2rem; border:1px solid #e2e8f0; font-size:0.85rem; font-family:'Inter',monospace; }
+    button { background:#1e4a6e; border:none; padding:0.7rem; border-radius:2rem; font-weight:600; color:white; cursor:pointer; width:100%; font-size:0.85rem; display:flex; align-items:center; justify-content:center; gap:6px; margin-top:0.4rem; transition:0.2s; }
+    .geo-btn { background:#2c7da0; }
+    .map-container { margin:0.5rem 0 0.8rem; border-radius:1rem; overflow:hidden; height:220px; border:1px solid #ddd; }
+    #locationMap { height:100%; width:100%; }
+    .search-container { display:flex; gap:6px; margin-bottom:6px; }
+    .suggestions { background:white; border-radius:1rem; margin-top:4px; max-height:140px; overflow-y:auto; box-shadow:0 4px 12px rgba(0,0,0,0.1); font-size:0.8rem; position:absolute; z-index:1000; width:calc(100% - 12px); }
+    .suggestion-item { padding:8px 12px; border-bottom:1px solid #edf2f7; cursor:pointer; }
+    hr { margin:0.8rem 0; border-top:1px solid #e2edf2; }
+    footer { text-align:center; font-size:0.65rem; margin-top:1rem; color:#5b6e8c; }
+    .change-location-btn { background:none; border:1px solid #cbd5e1; padding:0.3rem 0.8rem; font-size:0.7rem; border-radius:2rem; width:auto; margin-top:0.5rem; color:#1e4a6e; cursor:pointer; }
 
-    /* ================================================================
-       LAYOUT — PROTECTED TWO-COLUMN DESKTOP
-       .app-layout: max-width 1200px, centered
-       .two-columns: flex row, gap 2rem
-       .col-prayer: 45% fixed width | .col-settings: flex:1
-       Mobile: column stack
-       ================================================================ */
-    .app-layout {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 2rem;
-    }
-    .header {
-      text-align: center;
-      margin-bottom: 2rem;
-    }
-    .header h1 {
-      font-size: 1.8rem;
-      font-weight: 700;
-      background: linear-gradient(135deg, #0f2b3d, #1b4a6e);
-      background-clip: text;
-      -webkit-background-clip: text;
-      color: transparent;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-    }
-    .sub {
-      font-size: 0.75rem;
-      color: #4b5563;
-      margin-top: 4px;
-    }
-    .two-columns {
+    .loader-overlay { position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); backdrop-filter:blur(2px); display:flex; align-items:center; justify-content:center; z-index:3000; visibility:hidden; opacity:0; transition:0.2s; }
+    .loader-overlay.active { visibility:visible; opacity:1; }
+    .spinner { background:white; padding:1.2rem 2rem; border-radius:2rem; font-weight:600; display:flex; gap:0.8rem; align-items:center; box-shadow:0 10px 25px rgba(0,0,0,0.2); }
+    .spinner:after { content:''; width:20px; height:20px; border:3px solid #ddd; border-top-color:#1e4a6e; border-radius:50%; animation:spin 0.8s linear infinite; }
+    @keyframes spin { to { transform:rotate(360deg); } }
+    .toast { position:fixed; bottom:2rem; left:50%; transform:translateX(-50%) translateY(100px); background:#1e293b; color:white; padding:0.6rem 1.2rem; border-radius:3rem; font-size:0.85rem; z-index:1100; transition:0.2s; opacity:0; pointer-events:none; }
+    .toast.show { transform:translateX(-50%) translateY(0); opacity:1; }
+
+    .location-popover, .map-picker-modal { position:fixed; top:0; left:0; right:0; bottom:0; z-index:2000; display:none; align-items:center; justify-content:center; transition:opacity 0.2s; }
+    .location-popover.active, .map-picker-modal.active { display:flex; visibility:visible; opacity:1; }
+    .popover-backdrop, .picker-backdrop { position:absolute; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); backdrop-filter:blur(4px); }
+    .popover-container, .picker-card { position:relative; background:white; border-radius:2rem; max-width:90%; width:480px; padding:1.8rem; text-align:center; box-shadow:0 25px 40px rgba(0,0,0,0.2); }
+    .popover-header { font-size:1.4rem; font-weight:700; margin-bottom:0.5rem; color:#0f2b3d; }
+    .popover-sub { color:#4b5563; margin-bottom:1.5rem; }
+    .popover-options { display:flex; gap:1rem; justify-content:center; margin-bottom:1rem; flex-wrap:wrap; }
+    .option-card { background:#f8fafc; border:1px solid #e2e8f0; border-radius:1.2rem; padding:0.8rem 1.5rem; cursor:pointer; font-weight:600; transition:0.1s; }
+    .option-card:hover { background:#eef2ff; transform:scale(0.97); }
+    .skip-link { font-size:0.8rem; color:#6c757d; text-decoration:underline; cursor:pointer; margin-top:0.5rem; }
+    @media (max-width:600px) { .popover-container, .picker-card { width:90%; padding:1.2rem; } .popover-options { flex-direction:column; gap:0.8rem; } .option-card { width:100%; } }
+    .confirm-map-btn { background:#2c7da0; margin-top:0.5rem; }
+
+    /* New location display banner */
+    .current-location-banner {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 1.2rem;
+      padding: 0.8rem 1rem;
+      margin-bottom: 0.8rem;
       display: flex;
-      gap: 2rem;
-      align-items: flex-start;
-      flex-wrap: wrap;
-    }
-    .col-prayer {
-      flex: 0 0 45%;
-    }
-    .col-settings {
-      flex: 1;
-      min-width: 280px;
-    }
-    @media (max-width: 768px) {
-      .two-columns { flex-direction: column; }
-      .col-prayer { flex: auto; width: 100%; }
-      .col-settings { width: 100%; }
-      .app-layout { padding: 1rem; }
-    }
-
-    /* Card styles */
-    .glass-card, .settings-card {
-      background: white;
-      border-radius: 1.75rem;
-      padding: 1.2rem;
-      margin-bottom: 1rem;
-      box-shadow: 0 8px 20px rgba(0,0,0,0.03), 0 2px 6px rgba(0,0,0,0.05);
-      border: 1px solid rgba(0,0,0,0.05);
-    }
-    .section-title {
-      font-size: 1.1rem;
+      align-items: center;
+      gap: 0.6rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
       font-weight: 600;
-      margin-bottom: 1rem;
-      border-left: 4px solid #2c7da0;
-      padding-left: 12px;
+      font-size: 0.9rem;
       color: #0f2b3d;
-    }
-    .next-prayer-banner {
-      background: linear-gradient(105deg, #1a4b6e 0%, #0f3b57 100%);
-      border-radius: 1.5rem;
-      padding: 1.2rem;
-      color: white;
-      text-align: center;
-      margin-bottom: 1rem;
-    }
-    .next-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 2px; opacity: 0.8; }
-    .next-name { font-size: 1.8rem; font-weight: 800; margin: 0.2rem 0; }
-    .countdown {
-      font-size: 1.6rem;
-      font-weight: 700;
-      font-family: monospace;
-      background: rgba(255,255,255,0.2);
-      display: inline-block;
-      padding: 0.2rem 1rem;
-      border-radius: 3rem;
-      margin-top: 0.5rem;
-    }
-    .prayer-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 0.8rem;
-    }
-    .prayer-card {
-      background: #f8fafc;
-      border-radius: 1.2rem;
-      padding: 0.8rem 0.3rem;
-      text-align: center;
-      border: 1px solid #e9edf2;
-    }
-    .prayer-name { font-weight: 700; font-size: 0.8rem; color: #1e4a6e; text-transform: uppercase; }
-    .prayer-time { font-size: 1.2rem; font-weight: 700; font-family: monospace; margin-top: 4px; }
-    .qibla-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      background: #f1f5f9;
-      padding: 0.7rem 1rem;
-      border-radius: 1.2rem;
-      margin: 0.8rem 0;
-    }
-    .sunnah-info {
-      font-size: 0.75rem;
-      background: #f1f5fc;
-      border-radius: 1rem;
-      padding: 0.6rem;
-      text-align: center;
-    }
-    .input-group { margin-bottom: 1rem; }
-    label { font-size: 0.7rem; font-weight: 600; text-transform: uppercase; color: #2c7da0; display: block; margin-bottom: 0.2rem; }
-    input, select {
-      width: 100%;
-      padding: 0.7rem 0.9rem;
-      border-radius: 1.2rem;
-      border: 1px solid #e2e8f0;
-      font-size: 0.85rem;
-      font-family: 'Inter', monospace;
-    }
-    button {
-      background: #1e4a6e;
-      border: none;
-      padding: 0.7rem;
-      border-radius: 2rem;
-      font-weight: 600;
-      color: white;
-      cursor: pointer;
-      width: 100%;
-      font-size: 0.85rem;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      margin-top: 0.4rem;
       transition: 0.2s;
+      background: #f8fafd;
     }
-    .geo-btn { background: #2c7da0; }
-    .map-container { margin: 0.5rem 0 0.8rem; border-radius: 1rem; overflow: hidden; height: 220px; border: 1px solid #ddd; }
-    #locationMap { height: 100%; width: 100%; }
-    .search-container { display: flex; gap: 6px; margin-bottom: 6px; }
-    .suggestions {
-      background: white;
-      border-radius: 1rem;
-      margin-top: 4px;
-      max-height: 140px;
-      overflow-y: auto;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-      font-size: 0.8rem;
-      position: absolute;
-      z-index: 1000;
-      width: calc(100% - 12px);
+    .current-location-banner span {
+      font-size: 1.2rem;
     }
-    .suggestion-item { padding: 8px 12px; border-bottom: 1px solid #edf2f7; cursor: pointer; }
-    hr { margin: 0.8rem 0; border-top: 1px solid #e2edf2; }
-    footer { text-align: center; font-size: 0.65rem; margin-top: 1rem; color: #5b6e8c; }
-    .change-location-btn {
-      background: none;
-      border: 1px solid #cbd5e1;
-      padding: 0.3rem 0.8rem;
-      font-size: 0.7rem;
-      border-radius: 2rem;
-      width: auto;
-      margin-top: 0.5rem;
+    .current-location-banner .city-name {
+      flex: 1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .current-location-banner .tag {
+      font-size: 0.65rem;
+      background: #eef2ff;
       color: #1e4a6e;
-      cursor: pointer;
-    }
-    /* Loader overlay */
-    .loader-overlay {
-      position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0,0,0,0.5);
-      backdrop-filter: blur(2px);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 3000;
-      visibility: hidden;
-      opacity: 0;
-      transition: 0.2s;
-    }
-    .loader-overlay.active {
-      visibility: visible;
-      opacity: 1;
-    }
-    .spinner {
-      background: white;
-      padding: 1.2rem 2rem;
+      padding: 0.2rem 0.7rem;
       border-radius: 2rem;
-      font-weight: 600;
-      display: flex;
-      gap: 0.8rem;
-      align-items: center;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+      letter-spacing: 0.5px;
     }
-    .spinner:after {
-      content: '';
-      width: 20px;
-      height: 20px;
-      border: 3px solid #ddd;
-      border-top-color: #1e4a6e;
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    .toast {
-      position: fixed;
-      bottom: 2rem;
-      left: 50%;
-      transform: translateX(-50%) translateY(100px);
-      background: #1e293b;
-      color: white;
-      padding: 0.6rem 1.2rem;
-      border-radius: 3rem;
-      font-size: 0.85rem;
-      z-index: 1100;
-      transition: 0.2s;
-      opacity: 0;
-      pointer-events: none;
-    }
-    .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
-
-    /* -------- FIXED MODAL STYLES --------- */
-    .location-popover, .map-picker-modal {
-      position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      z-index: 2000;
-      display: none;               /* hidden by default */
-      align-items: center;
-      justify-content: center;
-      transition: opacity 0.2s;
-    }
-    .location-popover.active, .map-picker-modal.active {
-      display: flex;               /* show as flex when active */
-      visibility: visible;
-      opacity: 1;
-    }
-    .popover-backdrop, .picker-backdrop {
-      position: absolute;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0,0,0,0.5);
-      backdrop-filter: blur(4px);
-    }
-    .popover-container, .picker-card {
-      position: relative;
-      background: white;
-      border-radius: 2rem;
-      max-width: 90%;
-      width: 480px;
-      padding: 1.8rem;
-      text-align: center;
-      box-shadow: 0 25px 40px rgba(0,0,0,0.2);
-    }
-    .popover-header { font-size: 1.4rem; font-weight: 700; margin-bottom: 0.5rem; color: #0f2b3d; }
-    .popover-sub { color: #4b5563; margin-bottom: 1.5rem; }
-    .popover-options { display: flex; gap: 1rem; justify-content: center; margin-bottom: 1rem; flex-wrap: wrap; }
-    .option-card {
-      background: #f8fafc;
-      border: 1px solid #e2e8f0;
-      border-radius: 1.2rem;
-      padding: 0.8rem 1.5rem;
-      cursor: pointer;
-      font-weight: 600;
-      transition: 0.1s;
-    }
-    .option-card:hover { background: #eef2ff; transform: scale(0.97); }
-    .skip-link {
-      font-size: 0.8rem;
-      color: #6c757d;
-      text-decoration: underline;
-      cursor: pointer;
-      margin-top: 0.5rem;
-    }
-    @media (max-width: 600px) {
-      .popover-container, .picker-card { width: 90%; padding: 1.2rem; }
-      .popover-options { flex-direction: column; gap: 0.8rem; }
-      .option-card { width: 100%; }
-    }
-    .confirm-map-btn { background: #2c7da0; margin-top: 0.5rem; }
   </style>
 </head>
 <body>
@@ -320,46 +109,52 @@
   </div>
 
   <div class="two-columns">
-    <!-- LEFT COLUMN: prayers only -->
     <div class="col-prayer">
-      <div class="next-prayer-banner">
+      <div class="next-prayer-banner" id="nextBanner">
         <div class="next-label">🕯️ NEXT PRAYER</div>
-        <div class="next-name" id="nextPrayerName">—</div>
+        <div class="next-name" id="nextPrayerName">Set location</div>
         <div class="countdown" id="countdownTimer">--:--:--</div>
-        <div style="font-size:0.7rem; margin-top:0.4rem;" id="currentPrayerText"></div>
+        <div style="font-size:0.7rem; margin-top:0.4rem;" id="currentPrayerText">📍 Allow location to start</div>
       </div>
       <div class="glass-card">
         <div class="section-title">⏰ Today's Prayers</div>
-        <div class="prayer-grid" id="prayerGrid"></div>
-        <div class="qibla-row">
-          <span>🧭 Qibla Direction</span>
-          <span id="qiblaDeg">--°</span>
-          <span class="compass" id="compassArrow">🧭</span>
+        <div class="prayer-grid" id="prayerGrid">
+          <div class="prayer-card"><div class="prayer-name">—</div><div class="prayer-time">—</div></div>
+          <div class="prayer-card"><div class="prayer-name">—</div><div class="prayer-time">—</div></div>
+          <div class="prayer-card"><div class="prayer-name">—</div><div class="prayer-time">—</div></div>
+          <div class="prayer-card"><div class="prayer-name">—</div><div class="prayer-time">—</div></div>
+          <div class="prayer-card"><div class="prayer-name">—</div><div class="prayer-time">—</div></div>
+          <div class="prayer-card"><div class="prayer-name">—</div><div class="prayer-time">—</div></div>
         </div>
-        <div class="sunnah-info">
-          🌙 Last third: <strong id="lastThird">--:--</strong> &nbsp;|&nbsp; 🌌 Middle: <strong id="midNight">--:--</strong>
-        </div>
+        <div class="qibla-row"><span>🧭 Qibla</span><span id="qiblaDeg">--°</span><span>🧭</span></div>
+        <div class="sunnah-info">🌙 Last third: <strong id="lastThird">--:--</strong> &nbsp;|&nbsp; 🌌 Middle: <strong id="midNight">--:--</strong></div>
       </div>
       <footer>Adhan.js · High precision · Umm al‑Qura method</footer>
     </div>
 
-    <!-- RIGHT COLUMN: settings, map, controls -->
     <div class="col-settings">
       <div class="settings-card">
         <div class="search-container">
           <input type="text" id="locationSearchInput" placeholder="Search city, mosque..." autocomplete="off">
-          <button id="searchLocationBtn" style="width: auto; padding: 0 1rem;">🔍</button>
+          <button id="searchLocationBtn" style="width:auto; padding:0 1rem;">🔍</button>
         </div>
-        <div id="suggestionsList" class="suggestions" style="display: none;"></div>
+        <div id="suggestionsList" class="suggestions" style="display:none;"></div>
+
+        <!-- CURRENT LOCATION BANNER -->
+        <div class="current-location-banner" id="currentLocationDisplay">
+          <span>📍</span>
+          <span class="city-name" id="currentCityName">Detecting...</span>
+          <span class="tag">current</span>
+        </div>
+
         <div class="map-container"><div id="locationMap"></div></div>
         <div class="input-group"><label>🌐 Latitude</label><input type="number" id="latitude" step="any" value="21.4225"></div>
         <div class="input-group"><label>🌍 Longitude</label><input type="number" id="longitude" step="any" value="39.8262"></div>
         <button id="geolocationBtn" class="geo-btn">📍 Use My Current Location (GPS)</button>
-        <button id="manualChangeLocationBtn" class="change-location-btn" style="margin-top: 0.5rem;">🔄 Change location</button>
+        <button id="manualChangeLocationBtn" class="change-location-btn" style="margin-top:0.5rem;">🔄 Change location</button>
         <hr>
         <div class="input-group"><label>📅 Date</label><input type="date" id="datePicker"></div>
-        <div class="input-group">
-          <label>🕋 Calculation Method</label>
+        <div class="input-group"><label>🕋 Calculation Method</label>
           <select id="methodSelect">
             <option value="UmmAlQura" selected>Umm al-Qura University, Makkah</option>
             <option value="MuslimWorldLeague">Muslim World League</option>
@@ -378,17 +173,15 @@
             <option value="Hanafi">Hanafi (Juridical)</option>
           </select>
         </div>
-        <button id="applySettingsBtn" style="background: #2c7da0;">✓ Apply & Refresh</button>
+        <button id="applySettingsBtn" style="background:#2c7da0;">✓ Apply & Refresh</button>
       </div>
     </div>
   </div>
 </div>
 
-<!-- Global loader & toast -->
 <div id="globalLoader" class="loader-overlay"><div class="spinner">Loading location & prayer times</div></div>
 <div id="toastMsg" class="toast"></div>
 
-<!-- Location permission popover (modal) – NO inline display style! -->
 <div id="locationPopover" class="location-popover">
   <div class="popover-backdrop"></div>
   <div class="popover-container">
@@ -402,12 +195,11 @@
   </div>
 </div>
 
-<!-- Map picker modal -->
 <div id="mapPickerModal" class="map-picker-modal">
   <div class="picker-backdrop"></div>
   <div class="picker-card">
     <h3>🗺️ Select location on map</h3>
-    <div id="pickerMap" style="height: 280px; border-radius: 1rem; margin: 1rem 0;"></div>
+    <div id="pickerMap" style="height:280px; border-radius:1rem; margin:1rem 0;"></div>
     <button id="confirmPickerBtn" class="confirm-map-btn">✓ Use This Location</button>
     <div class="skip-link" id="pickerBackBtn">← Back</div>
   </div>
@@ -421,7 +213,9 @@
 <script type="module">
   import { Coordinates, CalculationMethod, PrayerTimes, Madhab, Qibla, SunnahTimes } from 'adhan';
 
-  // DOM elements
+  window._cachedPrayerTimes = null;
+  window._locationReady = false;
+
   const latInput = document.getElementById('latitude');
   const lonInput = document.getElementById('longitude');
   const datePicker = document.getElementById('datePicker');
@@ -440,21 +234,19 @@
   const qiblaDegSpan = document.getElementById('qiblaDeg');
   const lastThirdSpan = document.getElementById('lastThird');
   const midNightSpan = document.getElementById('midNight');
-  const compassArrow = document.getElementById('compassArrow');
   const toastDiv = document.getElementById('toastMsg');
   const globalLoader = document.getElementById('globalLoader');
+  const currentCityName = document.getElementById('currentCityName');
 
-  // Popover elements
   const popover = document.getElementById('locationPopover');
   const mapPickerModal = document.getElementById('mapPickerModal');
   let pickerMap = null, pickerMarker = null;
   let pendingLat = 21.4225, pendingLng = 39.8262;
   let map = null, marker = null;
 
-  // Helper: show/hide loader
   function showLoader(show, text = 'Loading...') {
     if (show) {
-      document.querySelector('#globalLoader .spinner').innerHTML = text;
+      document.querySelector('#globalLoader .spinner').textContent = text;
       globalLoader.classList.add('active');
     } else {
       globalLoader.classList.remove('active');
@@ -508,8 +300,8 @@
     return params;
   }
 
-  // Full refresh (prayer times & map sync)
   function fullRefresh() {
+    if (!window._locationReady) return;
     const { coords, dateObj } = getCurrentParams();
     const params = getCalculationParams(methodSelect.value, madhabSelect.value);
     const prayerTimes = new PrayerTimes(coords, dateObj, params);
@@ -529,34 +321,53 @@
     });
     const qiblaDir = Qibla(coords);
     qiblaDegSpan.innerText = `${Math.round(qiblaDir)}°`;
-    compassArrow.style.transform = `rotate(${qiblaDir}deg)`;
     try {
       const sunnah = new SunnahTimes(prayerTimes);
       lastThirdSpan.innerText = formatTime(sunnah.lastThirdOfTheNight);
       midNightSpan.innerText = formatTime(sunnah.middleOfTheNight);
     } catch(e) {}
+
     const clat = parseFloat(latInput.value), clng = parseFloat(lonInput.value);
     if (!isNaN(clat) && !isNaN(clng)) {
-      if (map && marker) { marker.setLatLng([clat, clng]); map.setView([clat, clng], map.getZoom()); }
-      else if (!map) initMainMap(clat, clng);
-      else if (map && !marker) { marker = L.marker([clat, clng], { draggable: true }).addTo(map); attachMarkerDrag(); map.setView([clat, clng], map.getZoom()); }
+      if (map && marker) {
+        marker.setLatLng([clat, clng]);
+        map.setView([clat, clng], map.getZoom());
+      } else if (!map) {
+        initMainMap(clat, clng);
+      } else if (map && !marker) {
+        marker = L.marker([clat, clng], { draggable: true }).addTo(map);
+        attachMarkerDrag();
+        map.setView([clat, clng], map.getZoom());
+      }
     }
     startCountdownTimer();
   }
 
-  function attachMarkerDrag() { if(marker) marker.on('dragend', () => { latInput.value = marker.getLatLng().lat.toFixed(6); lonInput.value = marker.getLatLng().lng.toFixed(6); fullRefresh(); }); }
+  function attachMarkerDrag() {
+    if(marker) marker.on('dragend', () => {
+      latInput.value = marker.getLatLng().lat.toFixed(6);
+      lonInput.value = marker.getLatLng().lng.toFixed(6);
+      fullRefresh();
+    });
+  }
+
   function initMainMap(lat, lng) {
     if (map) return;
     map = L.map('locationMap').setView([lat, lng], 12);
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { attribution: '&copy; OSM & CartoDB', subdomains: 'abcd' }).addTo(map);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+      attribution: '&copy; OSM & CartoDB', subdomains: 'abcd'
+    }).addTo(map);
     marker = L.marker([lat, lng], { draggable: true }).addTo(map);
     attachMarkerDrag();
-    map.on('click', e => { latInput.value = e.latlng.lat.toFixed(6); lonInput.value = e.latlng.lng.toFixed(6); fullRefresh(); });
+    map.on('click', e => {
+      latInput.value = e.latlng.lat.toFixed(6);
+      lonInput.value = e.latlng.lng.toFixed(6);
+      fullRefresh();
+    });
   }
 
-  // Countdown
   function getNextPrayerDateTime() {
-    if (!window._cachedPrayerTimes) fullRefresh();
+    if (!window._cachedPrayerTimes) return null;
     const today = window._cachedPrayerTimes;
     const now = new Date();
     const entries = [
@@ -566,10 +377,12 @@
     ];
     let upcoming = entries.filter(e => e.time && e.time > now);
     if (upcoming.length) return upcoming[0];
-    const tomorrow = new Date(window._cachedDate); tomorrow.setDate(tomorrow.getDate()+1);
+    const tomorrow = new Date(window._cachedDate);
+    tomorrow.setDate(tomorrow.getDate()+1);
     const tomorrowTimes = new PrayerTimes(window._cachedCoords, tomorrow, window._cachedParams);
     return { name: 'Fajr', time: tomorrowTimes.fajr };
   }
+
   let countdownInterval;
   function updateCountdown() {
     if (!window._cachedPrayerTimes) return;
@@ -584,15 +397,21 @@
     if (window._cachedPrayerTimes) {
       const now = new Date();
       const order = ['Fajr','Sunrise','Dhuhr','Asr','Maghrib','Isha'];
-      for (let p of order) { if (window._cachedPrayerTimes[p.toLowerCase()] && now >= window._cachedPrayerTimes[p.toLowerCase()]) current = p; }
+      for (let p of order) {
+        if (window._cachedPrayerTimes[p.toLowerCase()] && now >= window._cachedPrayerTimes[p.toLowerCase()]) current = p;
+      }
       if (!current && now < window._cachedPrayerTimes.fajr) current = 'Fajr';
       else if (current === 'Isha' && now >= window._cachedPrayerTimes.isha) current = 'Isha';
     }
     currentPrayerTextSpan.innerText = current !== '—' ? `✨ Current: ${current}` : '✨ —';
   }
-  function startCountdownTimer() { if(countdownInterval) clearInterval(countdownInterval); updateCountdown(); countdownInterval = setInterval(updateCountdown,1000); }
 
-  // Reverse geocode for toast
+  function startCountdownTimer() {
+    if(countdownInterval) clearInterval(countdownInterval);
+    updateCountdown();
+    countdownInterval = setInterval(updateCountdown, 1000);
+  }
+
   async function reverseGeocode(lat, lng) {
     try {
       const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=10`);
@@ -604,34 +423,42 @@
   async function setLocation(lat, lng, saveToStorage = true, showSuccessToast = true) {
     latInput.value = lat.toFixed(6);
     lonInput.value = lng.toFixed(6);
+
+    const city = await reverseGeocode(lat, lng);
+    // Update the visible banner
+    currentCityName.textContent = city || 'Unknown location';
+    currentCityName.title = city; // full name on hover if truncated
+
     if (saveToStorage) {
-      const city = await reverseGeocode(lat, lng);
       localStorage.setItem('noor_lat', lat);
       localStorage.setItem('noor_lng', lng);
       localStorage.setItem('noor_city', city);
       if (showSuccessToast) showToast(`📍 Location set to ${city}`);
     }
+    window._locationReady = true;
     fullRefresh();
   }
 
-  // ========== LOCATION FLOW (popover) ==========
-  function closePopover() { popover.classList.remove('active'); }
-  function openPopover() { popover.classList.add('active'); }
-  function closePicker() { mapPickerModal.classList.remove('active'); if(pickerMap) pickerMap.remove(); pickerMap = null; }
-  function openPicker() { mapPickerModal.classList.add('active'); setTimeout(() => { if (!pickerMap) initPickerMap(pendingLat, pendingLng); else pickerMap.invalidateSize(); }, 50); }
-
-  function initPickerMap(lat, lng) {
-    const container = document.getElementById('pickerMap');
-    if (!container) return;
-    if (pickerMap) pickerMap.remove();
-    pickerMap = L.map(container).setView([lat, lng], 12);
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { subdomains: 'abcd' }).addTo(pickerMap);
-    pickerMarker = L.marker([lat, lng], { draggable: true }).addTo(pickerMap);
-    pickerMarker.on('dragend', () => { const pos = pickerMarker.getLatLng(); pendingLat = pos.lat; pendingLng = pos.lng; });
-    pickerMap.on('click', e => { pickerMarker.setLatLng(e.latlng); pendingLat = e.latlng.lat; pendingLng = e.latlng.lng; });
+  async function useIPFallback(shouldClosePopover = false) {
+    showLoader(true, '🌐 Detecting location via IP...');
+    try {
+      const resp = await fetch('https://ip-api.com/json/');
+      const data = await resp.json();
+      if (data.status === 'success' && data.lat && data.lon) {
+        await setLocation(data.lat, data.lon, true, true);
+        showToast(`📍 Location set via IP: ${data.city || data.regionName || 'Unknown'}`);
+      } else {
+        throw new Error('IP API failed');
+      }
+    } catch(e) {
+      console.warn("IP fallback failed, using default Makkah");
+      await setLocation(21.4225, 39.8262, true, true);
+      showToast("Using Makkah (Umm al‑Qura) as default location");
+    }
+    showLoader(false);
+    if (shouldClosePopover) closePopover();
   }
 
-  // Use GPS from popover
   async function useGPS() {
     showLoader(true, '📍 Getting your GPS location...');
     if (!navigator.geolocation) {
@@ -652,24 +479,26 @@
     });
   }
 
-  async function useIPFallback(shouldClosePopover = false) {
-    showLoader(true, '🌐 Detecting location via IP...');
-    try {
-      const resp = await fetch('https://ipapi.co/json/');
-      const data = await resp.json();
-      if (data.latitude && data.longitude && !isNaN(data.latitude)) {
-        await setLocation(data.latitude, data.longitude, true, true);
-        showToast(`📍 Location set via IP: ${data.city || data.region || 'Unknown'}`);
-      } else {
-        throw new Error('Invalid IP response');
-      }
-    } catch(e) {
-      console.warn("IP fallback failed, using default Makkah");
-      await setLocation(21.4225, 39.8262, true, true);
-      showToast("Using Makkah (Umm al‑Qura) as default location");
-    }
-    showLoader(false);
-    if (shouldClosePopover) closePopover();
+  function closePopover() { popover.classList.remove('active'); }
+  function openPopover() { popover.classList.add('active'); }
+  function closePicker() { mapPickerModal.classList.remove('active'); if(pickerMap) pickerMap.remove(); pickerMap = null; }
+  function openPicker() {
+    mapPickerModal.classList.add('active');
+    setTimeout(() => {
+      if (!pickerMap) initPickerMap(pendingLat, pendingLng);
+      else pickerMap.invalidateSize();
+    }, 50);
+  }
+
+  function initPickerMap(lat, lng) {
+    const container = document.getElementById('pickerMap');
+    if (!container) return;
+    if (pickerMap) pickerMap.remove();
+    pickerMap = L.map(container).setView([lat, lng], 12);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { subdomains: 'abcd' }).addTo(pickerMap);
+    pickerMarker = L.marker([lat, lng], { draggable: true }).addTo(pickerMap);
+    pickerMarker.on('dragend', () => { const pos = pickerMarker.getLatLng(); pendingLat = pos.lat; pendingLng = pos.lng; });
+    pickerMap.on('click', e => { pickerMarker.setLatLng(e.latlng); pendingLat = e.latlng.lat; pendingLng = e.latlng.lng; });
   }
 
   async function confirmMapPick() {
@@ -681,33 +510,48 @@
     }
   }
 
-  // Event binding for popover
   document.querySelectorAll('[data-action="gps"]').forEach(el => el.addEventListener('click', useGPS));
-  document.querySelectorAll('[data-action="map"]').forEach(el => el.addEventListener('click', () => { closePopover(); pendingLat = parseFloat(latInput.value); pendingLng = parseFloat(lonInput.value); openPicker(); }));
+  document.querySelectorAll('[data-action="map"]').forEach(el => el.addEventListener('click', () => {
+    closePopover();
+    pendingLat = parseFloat(latInput.value) || 21.4225;
+    pendingLng = parseFloat(lonInput.value) || 39.8262;
+    openPicker();
+  }));
   document.getElementById('popoverSkip')?.addEventListener('click', async () => { await useIPFallback(true); });
   document.getElementById('pickerBackBtn')?.addEventListener('click', () => { closePicker(); openPopover(); });
   document.getElementById('confirmPickerBtn')?.addEventListener('click', confirmMapPick);
 
-  // Manual "Change location" button: clear localStorage and show popover
   manualChangeBtn.addEventListener('click', () => {
     localStorage.removeItem('noor_lat');
     localStorage.removeItem('noor_lng');
     localStorage.removeItem('noor_city');
+    window._locationReady = false;
+    nextPrayerNameSpan.innerText = 'Set location';
+    countdownSpan.innerText = '--:--:--';
+    currentPrayerTextSpan.innerText = '📍 Allow location to start';
+    prayerGrid.innerHTML = '';
+    const dummy = Array(6).fill('<div class="prayer-card"><div class="prayer-name">—</div><div class="prayer-time">—</div></div>');
+    prayerGrid.innerHTML = dummy.join('');
+    qiblaDegSpan.innerText = '--°';
+    lastThirdSpan.innerText = '--:--';
+    midNightSpan.innerText = '--:--';
+    currentCityName.textContent = 'Detecting...';
     openPopover();
   });
 
-  // Initial load: check localStorage, else popover
   async function initialLocationFlow() {
     const savedLat = localStorage.getItem('noor_lat');
     const savedLng = localStorage.getItem('noor_lng');
+    const savedCity = localStorage.getItem('noor_city');
     if (savedLat && savedLng && !isNaN(parseFloat(savedLat))) {
+      // Show saved city immediately
+      currentCityName.textContent = savedCity || 'Saved location';
       await setLocation(parseFloat(savedLat), parseFloat(savedLng), false, true);
     } else {
       openPopover();
     }
   }
 
-  // Search & other UI bindings
   let searchTimeout;
   searchInput.addEventListener('input', (e) => {
     clearTimeout(searchTimeout);
@@ -731,20 +575,19 @@
   searchBtn.onclick = () => searchInput.dispatchEvent(new Event('input'));
   document.addEventListener('click', (e) => { if (!suggestionsDiv.contains(e.target) && e.target !== searchInput) suggestionsDiv.style.display = 'none'; });
 
-  // Apply & refresh
   applyBtn.addEventListener('click', () => fullRefresh());
-  geolocBtn.addEventListener('click', async () => { 
+  geolocBtn.addEventListener('click', async () => {
     showLoader(true, '📍 Getting GPS...');
     if(navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(async pos => { 
-        await setLocation(pos.coords.latitude, pos.coords.longitude, true); 
+      navigator.geolocation.getCurrentPosition(async pos => {
+        await setLocation(pos.coords.latitude, pos.coords.longitude, true);
         showLoader(false);
-      }, async () => { 
+      }, async () => {
         showLoader(false);
         showToast("GPS failed, trying IP...");
         await useIPFallback(false);
       });
-    } else { 
+    } else {
       showLoader(false);
       showToast("GPS not supported, trying IP...");
       await useIPFallback(false);
@@ -756,13 +599,11 @@
   methodSelect.addEventListener('change', () => fullRefresh());
   madhabSelect.addEventListener('change', () => fullRefresh());
 
-  // Initialize app
   function init() {
     const today = new Date();
     datePicker.value = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
     methodSelect.value = "UmmAlQura";
     initMainMap(21.4225, 39.8262);
-    fullRefresh();
     initialLocationFlow();
   }
   init();
