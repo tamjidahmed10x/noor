@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Noor app icon">
+  <rect width="512" height="512" rx="128" fill="#f5f1ea" />
+  <circle cx="256" cy="256" r="184" fill="#b8892f" opacity="0.16" />
+  <path d="M314 124c-72 11-127 73-127 149 0 83 67 150 150 150 24 0 47-5 67-16-28 37-72 61-123 61-85 0-154-69-154-154 0-87 72-158 159-158 10 0 19 1 28 3z" fill="#1a1510" />
+  <circle cx="347" cy="180" r="20" fill="#1a1510" />
+</svg>

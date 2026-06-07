@@ -1,0 +1,21 @@
+{
+  "name": "Noor Prayer Times",
+  "short_name": "Noor",
+  "description": "Accurate prayer times with location-aware calculations, qibla direction, and daily prayer schedule.",
+  "id": "./index.html",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f5f1ea",
+  "theme_color": "#b8892f",
+  "lang": "en",
+  "dir": "ltr",
+  "icons": [
+    {
+      "src": "./icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
