@@ -707,7 +707,7 @@
         box-shadow: var(--sh-lg);
         max-height: 180px;
         overflow-y: auto;
-        z-index: 500;
+        z-index: 2000;
         display: none;
       }
       .sug-item {
@@ -1185,7 +1185,9 @@
             <div class="hero-header">
               <div class="hero-label">Now</div>
               <div class="hero-prayer-name" id="nowPrayer">—</div>
-              <div class="hero-subline" id="nextState">Prayer started at --:--</div>
+              <div class="hero-subline" id="nextState">
+                Prayer started at --:--
+              </div>
             </div>
 
             <div class="hero-countdown">
@@ -1758,9 +1760,10 @@
           const elapsed = Math.max(0, new Date() - cur.start);
           const elapsedHours = Math.floor(elapsed / 3600000);
           const elapsedMinutes = Math.floor((elapsed % 3600000) / 60000);
-          $("nextState").textContent = elapsedHours > 0
-            ? `${cur.name} started at ${fmt(cur.start)} passed ${elapsedHours} hour ${elapsedMinutes} minutes`
-            : `${cur.name} started at ${fmt(cur.start)} passed ${elapsedMinutes} minutes`;
+          $("nextState").textContent =
+            elapsedHours > 0
+              ? `${cur.name} started at ${fmt(cur.start)} passed ${elapsedHours} hour ${elapsedMinutes} minutes`
+              : `${cur.name} started at ${fmt(cur.start)} passed ${elapsedMinutes} minutes`;
         } else {
           $("nowPrayer").textContent = "—";
           $("nextState").textContent = "Prayer started at --:--";
