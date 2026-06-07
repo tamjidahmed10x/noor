@@ -312,10 +312,10 @@
         box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
         display: flex;
         flex-direction: column;
-        gap: 1.35rem;
+        gap: 0.65rem;
         position: relative;
         width: 100%;
-        padding: 1.55rem;
+        padding: 1.2rem;
         transition:
           background var(--tr),
           border-color var(--tr);
@@ -352,7 +352,7 @@
         z-index: 1;
         display: flex;
         flex-direction: column;
-        gap: 0.7rem;
+        gap: 0.3rem;
         min-width: 0;
       }
       .hero-label {
@@ -364,20 +364,23 @@
       }
       .hero-prayer-name {
         font-family: "DM Sans", sans-serif;
-        font-size: 46px;
+        font-size: 30px;
         font-weight: 600;
         color: var(--ink);
-        line-height: 0.95;
-        letter-spacing: -0.03em;
+        line-height: 1;
+        letter-spacing: -0.02em;
         transition: color var(--tr);
         text-wrap: balance;
         max-width: 10ch;
       }
       .hero-subline {
-        font-size: 13px;
+        font-size: 12px;
         color: var(--ink-3);
         letter-spacing: 0.01em;
-        max-width: 34ch;
+        max-width: 100%;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
       }
       .hero-countdown {
         position: relative;
@@ -385,9 +388,9 @@
         position: relative;
         display: flex;
         flex-direction: column;
-        gap: 0.7rem;
+        gap: 0.35rem;
         min-width: 0;
-        padding-top: 1rem;
+        padding-top: 0.65rem;
         border-top: 1px solid var(--border);
       }
       .hero-time-label {
@@ -413,34 +416,34 @@
       .cd-box {
         display: inline-flex;
         align-items: center;
-        gap: 2px;
-        background: linear-gradient(
-          180deg,
-          rgba(184, 137, 47, 0.1),
-          rgba(184, 137, 47, 0.16)
-        );
-        border: 1px solid var(--gold-bd);
-        border-radius: 14px;
-        padding: 0.7rem 0.95rem;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+        background: transparent;
+        border: none;
+        border-radius: 0;
+        padding: 0;
         margin-bottom: 0;
         width: fit-content;
       }
+      .cd-unit {
+        display: inline-flex;
+        align-items: baseline;
+        gap: 0.3rem;
+      }
       .cd-seg {
         font-family: "DM Mono", monospace;
-        font-size: 40px;
-        font-weight: 500;
-        color: var(--gold);
+        font-size: 54px;
+        font-weight: 600;
+        color: var(--ink);
         letter-spacing: -0.04em;
-        min-width: 50px;
+        min-width: 0;
         text-align: center;
       }
-      .cd-dot {
-        font-family: "DM Mono", monospace;
-        font-size: 26px;
-        color: var(--gold-bd);
-        margin: 0 1px;
-        padding-bottom: 2px;
-        user-select: none;
+      .cd-unit-label {
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--ink-3);
+        white-space: nowrap;
       }
       .next-at strong {
         font-family: "DM Mono", monospace;
@@ -1064,15 +1067,18 @@
         /* Hero: stack now/next vertically on small phones */
         .hero {
           min-height: 0;
-          padding: 1.15rem;
-          gap: 1rem;
+          padding: 1rem;
+          gap: 0.55rem;
         }
         .hero-prayer-name {
-          font-size: 36px;
+          font-size: 26px;
         }
         .cd-seg {
-          font-size: 28px;
-          min-width: 36px;
+          font-size: 40px;
+          min-width: 0;
+        }
+        .cd-unit-label {
+          font-size: 12px;
         }
         .next-at,
         .hero-meta {
@@ -1107,11 +1113,14 @@
 
       @media (max-width: 360px) {
         .hero-prayer-name {
-          font-size: 32px;
+          font-size: 24px;
         }
         .cd-seg {
-          font-size: 22px;
-          min-width: 28px;
+          font-size: 34px;
+          min-width: 0;
+        }
+        .cd-unit-label {
+          font-size: 11px;
         }
         .meta-row {
           grid-template-columns: 1fr;
@@ -1174,22 +1183,31 @@
           <!-- HERO -->
           <div class="hero">
             <div class="hero-header">
-              <div class="hero-label">Now prayer</div>
+              <div class="hero-label">Now</div>
               <div class="hero-prayer-name" id="nowPrayer">—</div>
-              <div class="hero-subline" id="nextState">Next: — at --:--</div>
+              <div class="hero-subline" id="nextState">Prayer started at --:--</div>
             </div>
 
             <div class="hero-countdown">
-              <div class="hero-time-label">Countdown</div>
-              <div class="cd-box">
-                <span class="cd-seg" id="cdH">--</span>
-                <span class="cd-dot">:</span>
-                <span class="cd-seg" id="cdM">--</span>
-                <span class="cd-dot">:</span>
-                <span class="cd-seg" id="cdS">--</span>
+              <div class="hero-time-label" id="countdownLabel">
+                Next prayer in
               </div>
-              <div class="hero-meta next-at">
-                remaining until <strong id="nextName">--</strong>
+              <div class="cd-box">
+                <span class="cd-unit" id="cdHoursWrap">
+                  <span class="cd-seg" id="cdH">--</span>
+                  <span class="cd-unit-label">hours</span>
+                </span>
+                <span class="cd-unit">
+                  <span class="cd-seg" id="cdM">--</span>
+                  <span class="cd-unit-label">minutes</span>
+                </span>
+                <span class="cd-unit">
+                  <span class="cd-seg" id="cdS">--</span>
+                  <span class="cd-unit-label">seconds</span>
+                </span>
+              </div>
+              <div class="hero-meta next-at" id="nextName">
+                Will start at --:--
               </div>
             </div>
           </div>
@@ -1737,21 +1755,33 @@
         const nxt = getNext();
         if (cur) {
           $("nowPrayer").textContent = cur.name;
+          const elapsed = Math.max(0, new Date() - cur.start);
+          const elapsedHours = Math.floor(elapsed / 3600000);
+          const elapsedMinutes = Math.floor((elapsed % 3600000) / 60000);
+          $("nextState").textContent = elapsedHours > 0
+            ? `${cur.name} started at ${fmt(cur.start)} passed ${elapsedHours} hour ${elapsedMinutes} minutes`
+            : `${cur.name} started at ${fmt(cur.start)} passed ${elapsedMinutes} minutes`;
         } else {
           $("nowPrayer").textContent = "—";
+          $("nextState").textContent = "Prayer started at --:--";
         }
         if (nxt && nxt.time) {
-          $("nextName").textContent = nxt.name;
-          $("nextState").textContent = `Next: ${nxt.name} at ${fmt(nxt.time)}`;
           const d = Math.max(0, nxt.time - new Date());
-          $("cdH").textContent = pad(Math.floor(d / 3600000));
-          $("cdM").textContent = pad(Math.floor((d % 3600000) / 60000));
-          $("cdS").textContent = pad(Math.floor((d % 60000) / 1000));
+          const hrs = Math.floor(d / 3600000);
+          const mins = Math.floor((d % 3600000) / 60000);
+          const secs = Math.floor((d % 60000) / 1000);
+          $("countdownLabel").textContent = `${nxt.name} will be in`;
+          $("nextName").textContent = `Will start at ${fmt(nxt.time)}`;
+          $("cdHoursWrap").style.display = hrs > 0 ? "inline-flex" : "none";
+          $("cdH").textContent = pad(hrs);
+          $("cdM").textContent = pad(mins);
+          $("cdS").textContent = pad(secs);
         } else {
           $("nowPrayer").textContent = "—";
-          $("nextName").textContent = "Set location";
-          $("nextState").textContent =
-            "Next: set location to calculate prayer times";
+          $("countdownLabel").textContent = "Next prayer in";
+          $("nextName").textContent = "Will start at --:--";
+          $("nextState").textContent = "Prayer started at --:--";
+          $("cdHoursWrap").style.display = "inline-flex";
           $("cdH").textContent = "--";
           $("cdM").textContent = "--";
           $("cdS").textContent = "--";
@@ -1909,15 +1939,16 @@
           localStorage.removeItem(k),
         );
         window._ready = false;
-        ["nowPrayer", "nextName", "qiblaDeg", "lastThird", "midNight"].forEach(
-          (id) => {
-            const e = $(id);
-            if (e) e.textContent = "—";
-          },
-        );
+        ["nowPrayer", "qiblaDeg", "lastThird", "midNight"].forEach((id) => {
+          const e = $(id);
+          if (e) e.textContent = "—";
+        });
         if ($("nextState"))
-          $("nextState").textContent =
-            "Next: set location to calculate prayer times";
+          $("nextState").textContent = "Prayer started at --:--";
+        if ($("countdownLabel"))
+          $("countdownLabel").textContent = "Next prayer in";
+        if ($("nextName")) $("nextName").textContent = "Will start at --:--";
+        if ($("cdHoursWrap")) $("cdHoursWrap").style.display = "inline-flex";
         ["cdH", "cdM", "cdS"].forEach((id) => {
           const e = $(id);
           if (e) e.textContent = "--";
