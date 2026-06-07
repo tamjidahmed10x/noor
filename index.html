@@ -1,612 +1,1785 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
-  <title>Noor | Prayer Times — Umm al‑Qura · GPS & Map</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Noor · Prayer Times</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=DM+Sans:opsz,wght@9..40,300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
   <style>
-    * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
-    body { background: linear-gradient(145deg, #f9fafc 0%, #eef2f7 100%); font-family:'Inter',sans-serif; min-height:100vh; color:#1e293b; }
-    .app-layout { max-width:1200px; margin:0 auto; padding:2rem; }
-    .header { text-align:center; margin-bottom:2rem; }
-    .header h1 { font-size:1.8rem; font-weight:700; background:linear-gradient(135deg, #0f2b3d, #1b4a6e); background-clip:text; -webkit-background-clip:text; color:transparent; display:inline-flex; align-items:center; gap:6px; }
-    .sub { font-size:0.75rem; color:#4b5563; margin-top:4px; }
-    .two-columns { display:flex; gap:2rem; align-items:flex-start; flex-wrap:wrap; }
-    .col-prayer { flex:0 0 45%; }
-    .col-settings { flex:1; min-width:280px; }
-    @media (max-width:768px) { .two-columns { flex-direction:column; } .col-prayer { flex:auto; width:100%; } .col-settings { width:100%; } .app-layout { padding:1rem; } }
+    /* ════════════════════════════════════════════
+       DESIGN TOKENS — LIGHT (default)
+    ════════════════════════════════════════════ */
+    :root {
+      --bg:          #f5f1ea;
+      --bg-alt:      #ede8df;
+      --surface:     #ffffff;
+      --surface-2:   #f9f6f1;
+      --surface-3:   #f0ebe2;
+      --border:      rgba(0,0,0,0.09);
+      --border-mid:  rgba(0,0,0,0.13);
 
-    .glass-card, .settings-card { background:white; border-radius:1.75rem; padding:1.2rem; margin-bottom:1rem; box-shadow:0 8px 20px rgba(0,0,0,0.03), 0 2px 6px rgba(0,0,0,0.05); border:1px solid rgba(0,0,0,0.05); }
-    .section-title { font-size:1.1rem; font-weight:600; margin-bottom:1rem; border-left:4px solid #2c7da0; padding-left:12px; color:#0f2b3d; }
-    .next-prayer-banner { background:linear-gradient(105deg, #1a4b6e 0%, #0f3b57 100%); border-radius:1.5rem; padding:1.2rem; color:white; text-align:center; margin-bottom:1rem; }
-    .next-label { font-size:0.7rem; text-transform:uppercase; letter-spacing:2px; opacity:0.8; }
-    .next-name { font-size:1.8rem; font-weight:800; margin:0.2rem 0; }
-    .countdown { font-size:1.6rem; font-weight:700; font-family:monospace; background:rgba(255,255,255,0.2); display:inline-block; padding:0.2rem 1rem; border-radius:3rem; margin-top:0.5rem; }
-    .prayer-grid { display:grid; grid-template-columns:repeat(3, 1fr); gap:0.8rem; }
-    .prayer-card { background:#f8fafc; border-radius:1.2rem; padding:0.8rem 0.3rem; text-align:center; border:1px solid #e9edf2; }
-    .prayer-name { font-weight:700; font-size:0.8rem; color:#1e4a6e; text-transform:uppercase; }
-    .prayer-time { font-size:1.2rem; font-weight:700; font-family:monospace; margin-top:4px; }
-    .qibla-row { display:flex; justify-content:space-between; align-items:center; background:#f1f5f9; padding:0.7rem 1rem; border-radius:1.2rem; margin:0.8rem 0; }
-    .sunnah-info { font-size:0.75rem; background:#f1f5fc; border-radius:1rem; padding:0.6rem; text-align:center; }
-    .input-group { margin-bottom:1rem; }
-    label { font-size:0.7rem; font-weight:600; text-transform:uppercase; color:#2c7da0; display:block; margin-bottom:0.2rem; }
-    input, select { width:100%; padding:0.7rem 0.9rem; border-radius:1.2rem; border:1px solid #e2e8f0; font-size:0.85rem; font-family:'Inter',monospace; }
-    button { background:#1e4a6e; border:none; padding:0.7rem; border-radius:2rem; font-weight:600; color:white; cursor:pointer; width:100%; font-size:0.85rem; display:flex; align-items:center; justify-content:center; gap:6px; margin-top:0.4rem; transition:0.2s; }
-    .geo-btn { background:#2c7da0; }
-    .map-container { margin:0.5rem 0 0.8rem; border-radius:1rem; overflow:hidden; height:220px; border:1px solid #ddd; }
-    #locationMap { height:100%; width:100%; }
-    .search-container { display:flex; gap:6px; margin-bottom:6px; }
-    .suggestions { background:white; border-radius:1rem; margin-top:4px; max-height:140px; overflow-y:auto; box-shadow:0 4px 12px rgba(0,0,0,0.1); font-size:0.8rem; position:absolute; z-index:1000; width:calc(100% - 12px); }
-    .suggestion-item { padding:8px 12px; border-bottom:1px solid #edf2f7; cursor:pointer; }
-    hr { margin:0.8rem 0; border-top:1px solid #e2edf2; }
-    footer { text-align:center; font-size:0.65rem; margin-top:1rem; color:#5b6e8c; }
-    .change-location-btn { background:none; border:1px solid #cbd5e1; padding:0.3rem 0.8rem; font-size:0.7rem; border-radius:2rem; width:auto; margin-top:0.5rem; color:#1e4a6e; cursor:pointer; }
+      --gold:        #b8892f;
+      --gold-light:  #d4a84b;
+      --gold-tint:   rgba(184,137,47,0.10);
+      --gold-tint2:  rgba(184,137,47,0.18);
+      --gold-border: rgba(184,137,47,0.30);
 
-    .loader-overlay { position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); backdrop-filter:blur(2px); display:flex; align-items:center; justify-content:center; z-index:3000; visibility:hidden; opacity:0; transition:0.2s; }
-    .loader-overlay.active { visibility:visible; opacity:1; }
-    .spinner { background:white; padding:1.2rem 2rem; border-radius:2rem; font-weight:600; display:flex; gap:0.8rem; align-items:center; box-shadow:0 10px 25px rgba(0,0,0,0.2); }
-    .spinner:after { content:''; width:20px; height:20px; border:3px solid #ddd; border-top-color:#1e4a6e; border-radius:50%; animation:spin 0.8s linear infinite; }
-    @keyframes spin { to { transform:rotate(360deg); } }
-    .toast { position:fixed; bottom:2rem; left:50%; transform:translateX(-50%) translateY(100px); background:#1e293b; color:white; padding:0.6rem 1.2rem; border-radius:3rem; font-size:0.85rem; z-index:1100; transition:0.2s; opacity:0; pointer-events:none; }
-    .toast.show { transform:translateX(-50%) translateY(0); opacity:1; }
+      --ink:         #1a1510;
+      --ink-2:       #3d3328;
+      --ink-3:       #7a6d5e;
+      --ink-4:       #a8998a;
+      --ink-5:       rgba(26,21,16,0.35);
 
-    .location-popover, .map-picker-modal { position:fixed; top:0; left:0; right:0; bottom:0; z-index:2000; display:none; align-items:center; justify-content:center; transition:opacity 0.2s; }
-    .location-popover.active, .map-picker-modal.active { display:flex; visibility:visible; opacity:1; }
-    .popover-backdrop, .picker-backdrop { position:absolute; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); backdrop-filter:blur(4px); }
-    .popover-container, .picker-card { position:relative; background:white; border-radius:2rem; max-width:90%; width:480px; padding:1.8rem; text-align:center; box-shadow:0 25px 40px rgba(0,0,0,0.2); }
-    .popover-header { font-size:1.4rem; font-weight:700; margin-bottom:0.5rem; color:#0f2b3d; }
-    .popover-sub { color:#4b5563; margin-bottom:1.5rem; }
-    .popover-options { display:flex; gap:1rem; justify-content:center; margin-bottom:1rem; flex-wrap:wrap; }
-    .option-card { background:#f8fafc; border:1px solid #e2e8f0; border-radius:1.2rem; padding:0.8rem 1.5rem; cursor:pointer; font-weight:600; transition:0.1s; }
-    .option-card:hover { background:#eef2ff; transform:scale(0.97); }
-    .skip-link { font-size:0.8rem; color:#6c757d; text-decoration:underline; cursor:pointer; margin-top:0.5rem; }
-    @media (max-width:600px) { .popover-container, .picker-card { width:90%; padding:1.2rem; } .popover-options { flex-direction:column; gap:0.8rem; } .option-card { width:100%; } }
-    .confirm-map-btn { background:#2c7da0; margin-top:0.5rem; }
+      --green:       #2e7d52;
+      --red:         #c0392b;
 
-    .current-location-banner {
-      background: #ffffff;
-      border: 1px solid #e2e8f0;
-      border-radius: 1.2rem;
-      padding: 0.8rem 1rem;
-      margin-bottom: 0.8rem;
+      --radius-xs:   6px;
+      --radius-sm:   10px;
+      --radius-md:   14px;
+      --radius-lg:   20px;
+      --radius-xl:   28px;
+
+      --shadow-sm:   0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+      --shadow-md:   0 4px 16px rgba(0,0,0,0.08), 0 2px 6px rgba(0,0,0,0.04);
+      --shadow-lg:   0 12px 40px rgba(0,0,0,0.10), 0 4px 12px rgba(0,0,0,0.06);
+
+      --transition:  0.2s cubic-bezier(0.4,0,0.2,1);
+    }
+
+    /* ════════════════════════════════════════════
+       DARK THEME TOKENS
+    ════════════════════════════════════════════ */
+    [data-theme="dark"] {
+      --bg:          #0e1117;
+      --bg-alt:      #13181f;
+      --surface:     #1a2130;
+      --surface-2:   #1f2836;
+      --surface-3:   #243040;
+      --border:      rgba(255,255,255,0.07);
+      --border-mid:  rgba(255,255,255,0.12);
+
+      --gold:        #d4a84b;
+      --gold-light:  #e8c06a;
+      --gold-tint:   rgba(212,168,75,0.10);
+      --gold-tint2:  rgba(212,168,75,0.18);
+      --gold-border: rgba(212,168,75,0.28);
+
+      --ink:         #f0ebe2;
+      --ink-2:       #c8bfb2;
+      --ink-3:       #8a7f72;
+      --ink-4:       #5a5248;
+      --ink-5:       rgba(240,235,226,0.30);
+
+      --green:       #4ade80;
+      --red:         #f87171;
+
+      --shadow-sm:   0 1px 3px rgba(0,0,0,0.3);
+      --shadow-md:   0 4px 16px rgba(0,0,0,0.4);
+      --shadow-lg:   0 12px 40px rgba(0,0,0,0.5);
+    }
+
+    /* ════════════════════════════════════════════
+       RESET & BASE
+    ════════════════════════════════════════════ */
+    *, *::before, *::after {
+      margin: 0; padding: 0; box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 15px;
+      line-height: 1.5;
+      background: var(--bg);
+      color: var(--ink);
+      min-height: 100dvh;
+      transition: background var(--transition), color var(--transition);
+    }
+
+    /* Grain texture */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.6;
+    }
+
+    [data-theme="dark"] body::before { opacity: 0.3; }
+
+    .app-root {
+      position: relative;
+      z-index: 1;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 1rem 1.25rem 3rem;
+    }
+
+    /* ════════════════════════════════════════════
+       NAV
+    ════════════════════════════════════════════ */
+    .noor-nav {
       display: flex;
       align-items: center;
-      gap: 0.6rem;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-      font-weight: 600;
-      font-size: 0.9rem;
-      color: #0f2b3d;
-      transition: 0.2s;
-      background: #f8fafd;
+      justify-content: space-between;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xl);
+      padding: 0 1.25rem;
+      height: 62px;
+      margin-bottom: 1.25rem;
+      box-shadow: var(--shadow-sm);
+      gap: 1rem;
+      transition: background var(--transition), border-color var(--transition);
     }
-    .current-location-banner span {
-      font-size: 1.2rem;
+
+    .nav-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0;
+      text-decoration: none;
     }
-    .current-location-banner .city-name {
+
+    .brand-icon {
+      width: 34px; height: 34px;
+      background: var(--gold-tint2);
+      border: 1px solid var(--gold-border);
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 17px;
+      flex-shrink: 0;
+      transition: background var(--transition);
+    }
+
+    .brand-text { line-height: 1.1; }
+
+    .brand-name {
+      font-family: 'Playfair Display', serif;
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--ink);
+      display: block;
+      transition: color var(--transition);
+    }
+
+    .brand-sub {
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--gold);
+      display: block;
+    }
+
+    .nav-center {
       flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 1rem;
+    }
+
+    .clock-pill {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 100px;
+      padding: 6px 16px;
+      box-shadow: var(--shadow-sm);
+      transition: background var(--transition);
+    }
+
+    .clock-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--green);
+      flex-shrink: 0;
+      animation: pulse 2.5s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(0.65); }
+    }
+
+    .clock-time {
+      font-family: 'DM Mono', monospace;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--ink);
+      letter-spacing: 0.04em;
+      white-space: nowrap;
+      transition: color var(--transition);
+    }
+
+    .clock-sep { width: 1px; height: 12px; background: var(--border-mid); }
+
+    .clock-method {
+      font-size: 10px;
+      color: var(--ink-3);
+      letter-spacing: 0.04em;
+      white-space: nowrap;
+    }
+
+    .nav-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+
+    .nav-location {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--ink-2);
+      transition: color var(--transition);
+    }
+
+    .loc-dot {
+      width: 5px; height: 5px;
+      border-radius: 50%;
+      background: var(--green);
+      flex-shrink: 0;
+    }
+
+    /* ── Theme toggle ── */
+    .theme-toggle {
+      width: 44px; height: 44px;
+      border: 1px solid var(--border);
+      background: var(--surface-2);
+      border-radius: 12px;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 17px;
+      transition: background var(--transition), border-color var(--transition), transform 0.15s;
+      flex-shrink: 0;
+    }
+
+    .theme-toggle:hover { background: var(--surface-3); transform: scale(1.05); }
+    .theme-toggle:active { transform: scale(0.96); }
+
+    .live-chip {
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      background: var(--gold);
+      color: #fff;
+      border-radius: 100px;
+      padding: 3px 10px;
+      flex-shrink: 0;
+    }
+
+    @media (max-width: 800px) {
+      .nav-center { display: none; }
+      .nav-location span { display: none; }
+      .noor-nav { padding: 0 1rem; }
+    }
+
+    /* ════════════════════════════════════════════
+       LAYOUT
+    ════════════════════════════════════════════ */
+    .main-grid {
+      display: grid;
+      grid-template-columns: 1fr 380px;
+      gap: 1.25rem;
+      align-items: start;
+    }
+
+    @media (max-width: 900px) {
+      .main-grid { grid-template-columns: 1fr; }
+    }
+
+    /* ════════════════════════════════════════════
+       HERO BANNER (Now + Next)
+    ════════════════════════════════════════════ */
+    .hero-banner {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xl);
+      overflow: hidden;
+      margin-bottom: 1.25rem;
+      box-shadow: var(--shadow-md);
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      position: relative;
+      transition: background var(--transition), border-color var(--transition);
+    }
+
+    /* Subtle geometric accent */
+    .hero-banner::before {
+      content: '';
+      position: absolute;
+      top: -60px; left: -60px;
+      width: 260px; height: 260px;
+      border-radius: 50%;
+      background: radial-gradient(circle, var(--gold-tint2) 0%, transparent 65%);
+      pointer-events: none;
+    }
+
+    .hero-now {
+      padding: 1.75rem 1.5rem 1.75rem 1.75rem;
+      position: relative;
+    }
+
+    .now-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      background: var(--gold);
+      color: #fff;
+      border-radius: 100px;
+      padding: 4px 12px;
+      margin-bottom: 1rem;
+    }
+
+    .now-prayer {
+      font-family: 'Playfair Display', serif;
+      font-size: 46px;
+      font-weight: 700;
+      color: var(--ink);
+      line-height: 1;
+      letter-spacing: -0.02em;
+      margin-bottom: 6px;
+      transition: color var(--transition);
+    }
+
+    .now-arabic {
+      font-size: 16px;
+      color: var(--gold);
+      letter-spacing: 0.08em;
+      margin-bottom: 14px;
+      opacity: 0.85;
+    }
+
+    .elapsed-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      color: var(--ink-3);
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 100px;
+      padding: 4px 12px;
+      transition: background var(--transition);
+    }
+
+    .elapsed-ring {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      border: 1.5px solid var(--ink-4);
+      flex-shrink: 0;
+    }
+
+    .hero-divider {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 16px 4px;
+      gap: 4px;
+    }
+
+    .div-line { flex: 1; width: 1px; background: var(--border); }
+
+    .div-chevron {
+      width: 26px; height: 26px;
+      border-radius: 50%;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      color: var(--ink-4);
+      font-size: 12px;
+      transition: background var(--transition);
+    }
+
+    .hero-next {
+      padding: 1.75rem 1.75rem 1.75rem 1.5rem;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+    }
+
+    .next-label {
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--ink-3);
+      margin-bottom: 1rem;
+    }
+
+    .next-prayer-name {
+      font-family: 'Playfair Display', serif;
+      font-size: 32px;
+      font-weight: 600;
+      color: var(--ink);
+      line-height: 1;
+      margin-bottom: 1rem;
+      transition: color var(--transition);
+    }
+
+    .countdown-display {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      background: var(--gold-tint2);
+      border: 1px solid var(--gold-border);
+      border-radius: var(--radius-md);
+      padding: 10px 16px;
+      margin-bottom: 10px;
+    }
+
+    .cd-num {
+      font-family: 'DM Mono', monospace;
+      font-size: 28px;
+      font-weight: 500;
+      color: var(--gold);
+      letter-spacing: -0.03em;
+      min-width: 38px;
+      text-align: center;
+    }
+
+    .cd-colon {
+      font-family: 'DM Mono', monospace;
+      font-size: 22px;
+      color: var(--gold-border);
+      margin: 0 1px;
+      user-select: none;
+      padding-bottom: 2px;
+    }
+
+    .next-at {
+      font-size: 12px;
+      color: var(--ink-3);
+    }
+
+    .next-at strong {
+      font-family: 'DM Mono', monospace;
+      font-size: 13px;
+      color: var(--ink-2);
+      font-weight: 500;
+      margin-left: 4px;
+    }
+
+    @media (max-width: 520px) {
+      .hero-banner { grid-template-columns: 1fr 1fr; }
+      .hero-divider { display: none; }
+      .now-prayer { font-size: 32px; }
+      .next-prayer-name { font-size: 24px; }
+      .cd-num { font-size: 20px; }
+      .hero-now, .hero-next { padding: 1.25rem; }
+    }
+
+    /* ════════════════════════════════════════════
+       META ROW
+    ════════════════════════════════════════════ */
+    .meta-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.75rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .meta-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 1rem 1.1rem;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      box-shadow: var(--shadow-sm);
+      transition: background var(--transition), border-color var(--transition), transform 0.15s;
+    }
+
+    .meta-card:hover { transform: translateY(-1px); box-shadow: var(--shadow-md); }
+
+    .meta-icon-wrap {
+      width: 38px; height: 38px;
+      border-radius: 10px;
+      background: var(--gold-tint2);
+      border: 1px solid var(--gold-border);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px;
+      flex-shrink: 0;
+    }
+
+    .meta-lbl {
+      font-size: 9px;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--ink-3);
+      display: block;
+      margin-bottom: 2px;
+    }
+
+    .meta-val {
+      font-family: 'DM Mono', monospace;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--ink-2);
+      display: block;
+    }
+
+    @media (max-width: 520px) {
+      .meta-row { grid-template-columns: 1fr 1fr; }
+      .meta-row > :last-child { grid-column: span 2; }
+    }
+
+    /* ════════════════════════════════════════════
+       PRAYER GRID CARD
+    ════════════════════════════════════════════ */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xl);
+      padding: 1.4rem;
+      box-shadow: var(--shadow-sm);
+      margin-bottom: 1.25rem;
+      transition: background var(--transition), border-color var(--transition);
+    }
+
+    .card-title {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--ink-3);
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .card-title-bar {
+      width: 3px; height: 14px;
+      background: var(--gold);
+      border-radius: 2px;
+      flex-shrink: 0;
+    }
+
+    .prayer-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.6rem;
+    }
+
+    .prayer-cell {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 0.9rem 0.5rem;
+      text-align: center;
+      cursor: default;
+      transition: background var(--transition), border-color var(--transition), transform 0.15s;
+    }
+
+    .prayer-cell:hover { transform: translateY(-2px); box-shadow: var(--shadow-sm); }
+
+    .prayer-cell.is-active {
+      background: var(--gold-tint2);
+      border-color: var(--gold-border);
+    }
+
+    .pcell-name {
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--ink-4);
+      margin-bottom: 5px;
+      display: block;
+      transition: color var(--transition);
+    }
+
+    .prayer-cell.is-active .pcell-name { color: var(--gold); }
+
+    .pcell-time {
+      font-family: 'DM Mono', monospace;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--ink);
+      display: block;
+      transition: color var(--transition);
+    }
+
+    /* ════════════════════════════════════════════
+       RIGHT COLUMN — SETTINGS
+    ════════════════════════════════════════════ */
+    .settings-col .card { margin-bottom: 1rem; }
+
+    .section-divider {
+      height: 1px;
+      background: var(--border);
+      margin: 1rem 0;
+    }
+
+    .field-label {
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--gold);
+      display: block;
+      margin-bottom: 6px;
+    }
+
+    .input-group { margin-bottom: 0.75rem; }
+
+    input[type="text"],
+    input[type="number"],
+    input[type="date"],
+    select {
+      width: 100%;
+      padding: 0.65rem 0.9rem;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      background: var(--surface-2);
+      color: var(--ink);
+      font-size: 13px;
+      font-family: 'DM Sans', sans-serif;
+      outline: none;
+      transition: border-color 0.2s, background var(--transition), color var(--transition);
+      -webkit-appearance: none;
+      appearance: none;
+      min-height: 44px;
+    }
+
+    input:focus, select:focus { border-color: var(--gold-border); box-shadow: 0 0 0 3px var(--gold-tint); }
+
+    select {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23a8998a' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 10px center;
+      background-size: 16px;
+      padding-right: 2.2rem;
+    }
+
+    select option { background: var(--surface); color: var(--ink); }
+
+    .two-fields {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.6rem;
+    }
+
+    /* Buttons */
+    .btn {
+      width: 100%;
+      min-height: 44px;
+      border: none;
+      border-radius: 100px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      transition: opacity 0.15s, transform 0.1s, background var(--transition);
+      margin-top: 0.4rem;
+    }
+
+    .btn:active { transform: scale(0.97); }
+
+    .btn-gold {
+      background: var(--gold);
+      color: #fff;
+      box-shadow: 0 2px 8px rgba(184,137,47,0.3);
+    }
+
+    .btn-gold:hover { opacity: 0.92; }
+
+    .btn-ghost {
+      background: var(--surface-2);
+      color: var(--ink-2);
+      border: 1px solid var(--border);
+    }
+
+    .btn-ghost:hover { background: var(--surface-3); }
+
+    .btn-outline-sm {
+      background: transparent;
+      color: var(--ink-3);
+      border: 1px solid var(--border);
+      font-size: 11px;
+      min-height: 38px;
+      border-radius: 100px;
+      cursor: pointer;
+      font-family: 'DM Sans', sans-serif;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      margin-top: 0.5rem;
+      width: 100%;
+      transition: all 0.15s;
+    }
+
+    .btn-outline-sm:hover { border-color: var(--gold-border); color: var(--gold); }
+
+    /* Search */
+    .search-wrap {
+      position: relative;
+      margin-bottom: 0.75rem;
+    }
+
+    .search-row {
+      display: flex;
+      gap: 7px;
+    }
+
+    .search-row input { flex: 1; border-radius: var(--radius-sm); }
+
+    .search-trigger {
+      min-height: 44px;
+      min-width: 44px;
+      border: 1px solid var(--border);
+      background: var(--surface-2);
+      border-radius: var(--radius-sm);
+      color: var(--ink-2);
+      cursor: pointer;
+      font-size: 15px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background var(--transition);
+      flex-shrink: 0;
+    }
+
+    .search-trigger:hover { background: var(--surface-3); }
+
+    .suggestions-dropdown {
+      position: absolute;
+      top: calc(100% + 4px);
+      left: 0; right: 0;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-lg);
+      max-height: 180px;
+      overflow-y: auto;
+      z-index: 500;
+      display: none;
+    }
+
+    .sug-item {
+      padding: 10px 14px;
+      font-size: 12px;
+      color: var(--ink-2);
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      transition: background 0.1s;
+    }
+
+    .sug-item:last-child { border-bottom: none; }
+    .sug-item:hover { background: var(--surface-2); color: var(--ink); }
+
+    /* Location banner */
+    .loc-banner {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 0.75rem 1rem;
+      margin-bottom: 0.75rem;
+      transition: background var(--transition);
+    }
+
+    .loc-icon { font-size: 18px; flex-shrink: 0; }
+
+    .loc-name {
+      flex: 1;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--ink);
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+      transition: color var(--transition);
     }
-    .current-location-banner .tag {
-      font-size: 0.65rem;
-      background: #eef2ff;
-      color: #1e4a6e;
-      padding: 0.2rem 0.7rem;
-      border-radius: 2rem;
-      letter-spacing: 0.5px;
+
+    .loc-badge {
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      background: var(--gold-tint2);
+      color: var(--gold);
+      border: 1px solid var(--gold-border);
+      border-radius: 100px;
+      padding: 3px 9px;
+      flex-shrink: 0;
     }
+
+    /* Map */
+    .map-frame {
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      height: 190px;
+      border: 1px solid var(--border);
+      margin-bottom: 0.75rem;
+    }
+
+    #locationMap { height: 100%; width: 100%; }
+
+    /* ════════════════════════════════════════════
+       LOADER & TOAST
+    ════════════════════════════════════════════ */
+    .loader-overlay {
+      position: fixed; inset: 0;
+      background: rgba(10,15,20,0.5);
+      backdrop-filter: blur(6px);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 3000;
+      visibility: hidden; opacity: 0;
+      transition: opacity 0.2s, visibility 0.2s;
+    }
+
+    .loader-overlay.is-active { visibility: visible; opacity: 1; }
+
+    .loader-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 1rem 1.8rem;
+      border-radius: var(--radius-xl);
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--ink-2);
+      display: flex;
+      gap: 0.9rem;
+      align-items: center;
+      box-shadow: var(--shadow-lg);
+    }
+
+    .loader-card::after {
+      content: '';
+      width: 20px; height: 20px;
+      border: 2px solid var(--border-mid);
+      border-top-color: var(--gold);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      flex-shrink: 0;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .toast-bar {
+      position: fixed;
+      bottom: 2rem; left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-lg);
+      color: var(--ink-2);
+      padding: 0.6rem 1.4rem;
+      border-radius: 100px;
+      font-size: 12px;
+      z-index: 1100;
+      transition: transform 0.25s cubic-bezier(0.34,1.56,0.64,1), opacity 0.25s;
+      opacity: 0;
+      pointer-events: none;
+      white-space: nowrap;
+    }
+
+    .toast-bar.is-show { transform: translateX(-50%) translateY(0); opacity: 1; }
+
+    /* ════════════════════════════════════════════
+       POPOVER / MODAL
+    ════════════════════════════════════════════ */
+    .overlay {
+      position: fixed; inset: 0;
+      z-index: 2000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .overlay.is-open { display: flex; }
+
+    .overlay-backdrop {
+      position: absolute; inset: 0;
+      background: rgba(10,15,20,0.55);
+      backdrop-filter: blur(8px);
+    }
+
+    .modal-box {
+      position: relative;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xl);
+      max-width: 90%;
+      width: 460px;
+      padding: 2.2rem 2rem;
+      text-align: center;
+      box-shadow: var(--shadow-lg);
+      animation: modalIn 0.28s cubic-bezier(0.34,1.56,0.64,1);
+    }
+
+    @keyframes modalIn {
+      from { transform: scale(0.92) translateY(12px); opacity: 0; }
+      to   { transform: scale(1) translateY(0); opacity: 1; }
+    }
+
+    .modal-glyph { font-size: 2.8rem; margin-bottom: 0.6rem; display: block; }
+
+    .modal-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: var(--ink);
+      margin-bottom: 0.5rem;
+      transition: color var(--transition);
+    }
+
+    .modal-sub {
+      font-size: 13px;
+      color: var(--ink-3);
+      margin-bottom: 1.6rem;
+      line-height: 1.6;
+    }
+
+    .modal-opts {
+      display: flex;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .opt-btn {
+      flex: 1;
+      min-width: 140px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 1rem 1.2rem;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 13px;
+      color: var(--ink-2);
+      font-family: 'DM Sans', sans-serif;
+      min-height: 64px;
+      transition: border-color 0.15s, color 0.15s, background 0.15s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .opt-btn:hover { border-color: var(--gold-border); color: var(--gold); background: var(--gold-tint2); }
+
+    .modal-skip {
+      font-size: 11px;
+      color: var(--ink-3);
+      text-decoration: underline;
+      cursor: pointer;
+      transition: color 0.15s;
+      background: none;
+      border: none;
+      font-family: 'DM Sans', sans-serif;
+    }
+
+    .modal-skip:hover { color: var(--ink); }
+
+    @media (max-width: 500px) {
+      .modal-opts { flex-direction: column; }
+      .modal-box { padding: 1.6rem 1.3rem; }
+    }
+
+    /* ════════════════════════════════════════════
+       FOOTER
+    ════════════════════════════════════════════ */
+    .app-footer {
+      text-align: center;
+      font-size: 10px;
+      color: var(--ink-4);
+      letter-spacing: 0.06em;
+      margin-top: 1.5rem;
+    }
+
+    /* ════════════════════════════════════════════
+       SCROLLBAR
+    ════════════════════════════════════════════ */
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border-mid); border-radius: 10px; }
   </style>
 </head>
 <body>
-<div class="app-layout">
-  <div class="header">
-    <h1><span>🕌</span> Noor · Prayer Times</h1>
-    <div class="sub">Umm al‑Qura (Makkah) · GPS · Map · Accurate</div>
-  </div>
 
-  <div class="two-columns">
-    <div class="col-prayer">
-      <div class="next-prayer-banner" id="nextBanner">
-        <div class="next-label">🕯️ NEXT PRAYER</div>
-        <div class="next-name" id="nextPrayerName">Set location</div>
-        <div class="countdown" id="countdownTimer">--:--:--</div>
-        <div style="font-size:0.7rem; margin-top:0.4rem;" id="currentPrayerText">📍 Allow location to start</div>
+<div class="app-root">
+
+  <!-- ═══ NAV ═══ -->
+  <nav class="noor-nav" role="banner">
+    <a class="nav-brand" href="#" aria-label="Noor Prayer Times home">
+      <div class="brand-icon" aria-hidden="true">☽</div>
+      <div class="brand-text">
+        <span class="brand-name">Noor</span>
+        <span class="brand-sub">Prayer Times</span>
       </div>
-      <div class="glass-card">
-        <div class="section-title">⏰ Today's Prayers</div>
-        <div class="prayer-grid" id="prayerGrid">
-          <div class="prayer-card"><div class="prayer-name">—</div><div class="prayer-time">—</div></div>
-          <div class="prayer-card"><div class="prayer-name">—</div><div class="prayer-time">—</div></div>
-          <div class="prayer-card"><div class="prayer-name">—</div><div class="prayer-time">—</div></div>
-          <div class="prayer-card"><div class="prayer-name">—</div><div class="prayer-time">—</div></div>
-          <div class="prayer-card"><div class="prayer-name">—</div><div class="prayer-time">—</div></div>
-          <div class="prayer-card"><div class="prayer-name">—</div><div class="prayer-time">—</div></div>
-        </div>
-        <div class="qibla-row"><span>🧭 Qibla</span><span id="qiblaDeg">--°</span><span>🧭</span></div>
-        <div class="sunnah-info">🌙 Last third: <strong id="lastThird">--:--</strong> &nbsp;|&nbsp; 🌌 Middle: <strong id="midNight">--:--</strong></div>
+    </a>
+
+    <div class="nav-center" role="status" aria-live="polite">
+      <div class="clock-pill">
+        <div class="clock-dot" aria-hidden="true"></div>
+        <time class="clock-time" id="navClock" aria-label="Current time">--:--:-- --</time>
+        <div class="clock-sep" aria-hidden="true"></div>
+        <span class="clock-method" id="navMethod">Umm al-Qura</span>
       </div>
-      <footer>Adhan.js · High precision · Umm al‑Qura method</footer>
     </div>
 
-    <div class="col-settings">
-      <div class="settings-card">
-        <div class="search-container">
-          <input type="text" id="locationSearchInput" placeholder="Search city, mosque..." autocomplete="off">
-          <button id="searchLocationBtn" style="width:auto; padding:0 1rem;">🔍</button>
-        </div>
-        <div id="suggestionsList" class="suggestions" style="display:none;"></div>
+    <div class="nav-right">
+      <div class="nav-location" aria-label="Current location">
+        <div class="loc-dot" aria-hidden="true"></div>
+        <span id="navCity">Detecting…</span>
+      </div>
+      <button class="theme-toggle" id="themeToggleBtn" aria-label="Toggle dark/light theme" title="Toggle theme">
+        <span id="themeIcon">🌙</span>
+      </button>
+      <div class="live-chip" aria-label="Live calculation">Live</div>
+    </div>
+  </nav>
 
-        <!-- CURRENT LOCATION BANNER -->
-        <div class="current-location-banner" id="currentLocationDisplay">
-          <span>📍</span>
-          <span class="city-name" id="currentCityName">Detecting...</span>
-          <span class="tag">current</span>
+  <!-- ═══ MAIN GRID ═══ -->
+  <div class="main-grid">
+
+    <!-- LEFT COLUMN -->
+    <div>
+
+      <!-- HERO BANNER -->
+      <div class="hero-banner" role="region" aria-label="Current and next prayer">
+        <div class="hero-now">
+          <div class="now-label" aria-label="Current prayer">● Now</div>
+          <div class="now-prayer" id="nowPrayer" aria-live="polite">—</div>
+          <div class="now-arabic" id="nowArabic" aria-hidden="true">—</div>
+          <div class="elapsed-tag">
+            <div class="elapsed-ring" aria-hidden="true"></div>
+            <span id="elapsedText" aria-label="Time elapsed">—</span>
+          </div>
         </div>
 
-        <div class="map-container"><div id="locationMap"></div></div>
-        <div class="input-group"><label>🌐 Latitude</label><input type="number" id="latitude" step="any" value="21.4225"></div>
-        <div class="input-group"><label>🌍 Longitude</label><input type="number" id="longitude" step="any" value="39.8262"></div>
-        <button id="geolocationBtn" class="geo-btn">📍 Use My Current Location (GPS)</button>
-        <button id="manualChangeLocationBtn" class="change-location-btn" style="margin-top:0.5rem;">🔄 Change location</button>
-        <hr>
-        <div class="input-group"><label>📅 Date</label><input type="date" id="datePicker"></div>
-        <div class="input-group"><label>🕋 Calculation Method</label>
-          <select id="methodSelect">
-            <option value="UmmAlQura" selected>Umm al-Qura University, Makkah</option>
+        <div class="hero-divider" aria-hidden="true">
+          <div class="div-line"></div>
+          <div class="div-chevron">›</div>
+          <div class="div-line"></div>
+        </div>
+
+        <div class="hero-next">
+          <div class="next-label">Up next</div>
+          <div class="next-prayer-name" id="nextPrayerName" aria-live="polite">Set location</div>
+          <div class="countdown-display" role="timer" aria-label="Countdown to next prayer">
+            <span class="cd-num" id="cdH">--</span>
+            <span class="cd-colon">:</span>
+            <span class="cd-num" id="cdM">--</span>
+            <span class="cd-colon">:</span>
+            <span class="cd-num" id="cdS">--</span>
+          </div>
+          <div class="next-at">at <strong id="nextPrayerAt">--:--</strong></div>
+        </div>
+      </div>
+
+      <!-- META ROW -->
+      <div class="meta-row" role="region" aria-label="Additional prayer information">
+        <div class="meta-card">
+          <div class="meta-icon-wrap" aria-hidden="true">🧭</div>
+          <div>
+            <span class="meta-lbl">Qibla</span>
+            <span class="meta-val" id="qiblaDeg">—</span>
+          </div>
+        </div>
+        <div class="meta-card">
+          <div class="meta-icon-wrap" aria-hidden="true">🌙</div>
+          <div>
+            <span class="meta-lbl">Last Third</span>
+            <span class="meta-val" id="lastThird">—</span>
+          </div>
+        </div>
+        <div class="meta-card">
+          <div class="meta-icon-wrap" aria-hidden="true">✦</div>
+          <div>
+            <span class="meta-lbl">Midnight</span>
+            <span class="meta-val" id="midNight">—</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- PRAYER GRID -->
+      <div class="card" role="region" aria-label="Today's prayer times">
+        <div class="card-title">
+          <div class="card-title-bar" aria-hidden="true"></div>
+          Today's Prayers
+        </div>
+        <div class="prayer-grid" id="prayerGrid">
+          <!-- filled by JS -->
+          <div class="prayer-cell"><span class="pcell-name">—</span><span class="pcell-time">—</span></div>
+          <div class="prayer-cell"><span class="pcell-name">—</span><span class="pcell-time">—</span></div>
+          <div class="prayer-cell"><span class="pcell-name">—</span><span class="pcell-time">—</span></div>
+          <div class="prayer-cell"><span class="pcell-name">—</span><span class="pcell-time">—</span></div>
+          <div class="prayer-cell"><span class="pcell-name">—</span><span class="pcell-time">—</span></div>
+          <div class="prayer-cell"><span class="pcell-name">—</span><span class="pcell-time">—</span></div>
+        </div>
+      </div>
+
+      <p class="app-footer">Noor · Adhan.js · High Precision Calculation</p>
+    </div>
+
+    <!-- RIGHT COLUMN — SETTINGS -->
+    <div class="settings-col">
+      <div class="card">
+        <div class="card-title">
+          <div class="card-title-bar" aria-hidden="true"></div>
+          Location
+        </div>
+
+        <!-- Search -->
+        <div class="search-wrap">
+          <div class="search-row" role="search">
+            <label for="locationSearch" class="sr-only">Search city</label>
+            <input type="text" id="locationSearch" placeholder="Search city…" autocomplete="off" aria-label="Search city">
+            <button class="search-trigger" id="searchBtn" aria-label="Search">
+              <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+            </button>
+          </div>
+          <div id="suggestionsDrop" class="suggestions-dropdown" role="listbox" aria-label="Location suggestions"></div>
+        </div>
+
+        <!-- Current location banner -->
+        <div class="loc-banner" role="status">
+          <span class="loc-icon" aria-hidden="true">📍</span>
+          <span class="loc-name" id="locCityName">Detecting…</span>
+          <span class="loc-badge">active</span>
+        </div>
+
+        <!-- Map -->
+        <div class="map-frame" role="img" aria-label="Location map">
+          <div id="locationMap"></div>
+        </div>
+
+        <!-- Coordinates -->
+        <div class="two-fields">
+          <div class="input-group">
+            <label class="field-label" for="latInput">Latitude</label>
+            <input type="number" id="latInput" step="any" value="21.4225" aria-label="Latitude">
+          </div>
+          <div class="input-group">
+            <label class="field-label" for="lonInput">Longitude</label>
+            <input type="number" id="lonInput" step="any" value="39.8262" aria-label="Longitude">
+          </div>
+        </div>
+
+        <button class="btn btn-ghost" id="gpsBtn" aria-label="Use GPS location">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
+          Use GPS Location
+        </button>
+        <button class="btn-outline-sm" id="changeLocBtn" aria-label="Change location">
+          <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5"/></svg>
+          Change Location
+        </button>
+
+        <div class="section-divider" role="separator"></div>
+
+        <!-- Settings -->
+        <div class="card-title" style="margin-bottom:1rem;">
+          <div class="card-title-bar" aria-hidden="true"></div>
+          Settings
+        </div>
+
+        <div class="input-group">
+          <label class="field-label" for="dateInput">Date</label>
+          <input type="date" id="dateInput" aria-label="Select date">
+        </div>
+
+        <div class="input-group">
+          <label class="field-label" for="methodSelect">Calculation Method</label>
+          <select id="methodSelect" aria-label="Calculation method">
+            <option value="UmmAlQura" selected>Umm al-Qura (Makkah)</option>
             <option value="MuslimWorldLeague">Muslim World League</option>
             <option value="Egyptian">Egyptian (GAZT)</option>
             <option value="Karachi">University of Karachi</option>
             <option value="MoonsightingCommittee">Moonsighting Committee</option>
-            <option value="NorthAmerica">North America (ISNA)</option>
+            <option value="NorthAmerica">ISNA (North America)</option>
             <option value="Kuwait">Kuwait</option>
             <option value="Qatar">Qatar</option>
             <option value="Singapore">Singapore</option>
           </select>
         </div>
-        <div class="input-group"><label>🕌 Asr Madhab</label>
-          <select id="madhabSelect">
+
+        <div class="input-group">
+          <label class="field-label" for="madhabSelect">Asr Madhab</label>
+          <select id="madhabSelect" aria-label="Asr Madhab">
             <option value="Shafi">Shafi / Maliki / Hanbali (Standard)</option>
             <option value="Hanafi">Hanafi (Juridical)</option>
           </select>
         </div>
-        <button id="applySettingsBtn" style="background:#2c7da0;">✓ Apply & Refresh</button>
+
+        <button class="btn btn-gold" id="applyBtn" aria-label="Apply settings and refresh prayer times">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
+          Apply & Refresh
+        </button>
       </div>
     </div>
-  </div>
+
+  </div><!-- end main-grid -->
+</div><!-- end app-root -->
+
+<!-- ═══ LOADER ═══ -->
+<div id="globalLoader" class="loader-overlay" role="status" aria-live="polite" aria-label="Loading">
+  <div class="loader-card" id="loaderMsg">Loading…</div>
 </div>
 
-<div id="globalLoader" class="loader-overlay"><div class="spinner">Loading location & prayer times</div></div>
-<div id="toastMsg" class="toast"></div>
+<!-- ═══ TOAST ═══ -->
+<div id="toastEl" class="toast-bar" role="status" aria-live="polite"></div>
 
-<div id="locationPopover" class="location-popover">
-  <div class="popover-backdrop"></div>
-  <div class="popover-container">
-    <div class="popover-header">🕌 Welcome to Noor</div>
-    <p class="popover-sub">To show accurate prayer times, we need your location.</p>
-    <div class="popover-options">
-      <div class="option-card" data-action="gps">📍 Use My Location</div>
-      <div class="option-card" data-action="map">🗺️ Pick on Map</div>
+<!-- ═══ LOCATION POPOVER ═══ -->
+<div id="locationPopover" class="overlay" role="dialog" aria-modal="true" aria-labelledby="popTitle">
+  <div class="overlay-backdrop"></div>
+  <div class="modal-box">
+    <span class="modal-glyph" aria-hidden="true">🕌</span>
+    <h1 class="modal-title" id="popTitle">Welcome to Noor</h1>
+    <p class="modal-sub">Accurate prayer times need your location. How would you like to share it?</p>
+    <div class="modal-opts">
+      <button class="opt-btn" data-action="gps">
+        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
+        Use My Location
+      </button>
+      <button class="opt-btn" data-action="map">
+        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" aria-hidden="true"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>
+        Pick on Map
+      </button>
     </div>
-    <div class="skip-link" id="popoverSkip">Skip for now (IP location)</div>
+    <button class="modal-skip" id="popoverSkip">Skip — use IP location</button>
   </div>
 </div>
 
-<div id="mapPickerModal" class="map-picker-modal">
-  <div class="picker-backdrop"></div>
-  <div class="picker-card">
-    <h3>🗺️ Select location on map</h3>
-    <div id="pickerMap" style="height:280px; border-radius:1rem; margin:1rem 0;"></div>
-    <button id="confirmPickerBtn" class="confirm-map-btn">✓ Use This Location</button>
-    <div class="skip-link" id="pickerBackBtn">← Back</div>
+<!-- ═══ MAP PICKER MODAL ═══ -->
+<div id="mapPickerModal" class="overlay" role="dialog" aria-modal="true" aria-label="Select location on map">
+  <div class="overlay-backdrop"></div>
+  <div class="modal-box" style="width:500px;">
+    <h2 class="modal-title" style="font-size:1.2rem; margin-bottom:0.3rem;">Select Location</h2>
+    <p class="modal-sub" style="margin-bottom:0.8rem; font-size:12px;">Tap the map or drag the marker to your location.</p>
+    <div id="pickerMap" style="height:280px; border-radius:var(--radius-md); border:1px solid var(--border); overflow:hidden;"></div>
+    <button class="btn btn-gold" id="confirmPick" style="margin-top:0.8rem;" aria-label="Confirm selected location">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
+      Use This Location
+    </button>
+    <button class="modal-skip" id="pickerBack" style="display:block; margin-top:0.6rem;">← Back</button>
   </div>
 </div>
 
+<!-- SCRIPTS -->
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script type="importmap">
   { "imports": { "adhan": "https://cdn.jsdelivr.net/npm/adhan@4.4.3/+esm" } }
 </script>
 
 <script type="module">
-  import { Coordinates, CalculationMethod, PrayerTimes, Madhab, Qibla, SunnahTimes } from 'adhan';
+import { Coordinates, CalculationMethod, PrayerTimes, Madhab, Qibla, SunnahTimes } from 'adhan';
 
-  window._cachedPrayerTimes = null;
-  window._locationReady = false;
+/* ── State ── */
+let countdownInterval = null;
+let map = null, mapMarker = null;
+let pickerMap = null, pickerMarker = null;
+let pendingLat = 21.4225, pendingLng = 39.8262;
+window._todayTimes = null;
+window._cachedCoords = null;
+window._cachedParams = null;
+window._locationReady = false;
 
-  const latInput = document.getElementById('latitude');
-  const lonInput = document.getElementById('longitude');
-  const datePicker = document.getElementById('datePicker');
-  const methodSelect = document.getElementById('methodSelect');
-  const madhabSelect = document.getElementById('madhabSelect');
-  const applyBtn = document.getElementById('applySettingsBtn');
-  const geolocBtn = document.getElementById('geolocationBtn');
-  const manualChangeBtn = document.getElementById('manualChangeLocationBtn');
-  const searchInput = document.getElementById('locationSearchInput');
-  const searchBtn = document.getElementById('searchLocationBtn');
-  const suggestionsDiv = document.getElementById('suggestionsList');
-  const prayerGrid = document.getElementById('prayerGrid');
-  const nextPrayerNameSpan = document.getElementById('nextPrayerName');
-  const countdownSpan = document.getElementById('countdownTimer');
-  const currentPrayerTextSpan = document.getElementById('currentPrayerText');
-  const qiblaDegSpan = document.getElementById('qiblaDeg');
-  const lastThirdSpan = document.getElementById('lastThird');
-  const midNightSpan = document.getElementById('midNight');
-  const toastDiv = document.getElementById('toastMsg');
-  const globalLoader = document.getElementById('globalLoader');
-  const currentCityName = document.getElementById('currentCityName');
+/* ── DOM ── */
+const $ = id => document.getElementById(id);
+const latInput     = $('latInput');
+const lonInput     = $('lonInput');
+const dateInput    = $('dateInput');
+const methodSel    = $('methodSelect');
+const madhabSel    = $('madhabSelect');
+const applyBtn     = $('applyBtn');
+const gpsBtn       = $('gpsBtn');
+const changeLocBtn = $('changeLocBtn');
+const searchInput  = $('locationSearch');
+const searchBtn    = $('searchBtn');
+const sugDrop      = $('suggestionsDrop');
+const prayerGrid   = $('prayerGrid');
+const navClock     = $('navClock');
+const navCity      = $('navCity');
+const navMethod    = $('navMethod');
+const loaderEl     = $('globalLoader');
+const loaderMsg    = $('loaderMsg');
+const toastEl      = $('toastEl');
+const locCityName  = $('locCityName');
+const popover      = $('locationPopover');
+const pickerModal  = $('mapPickerModal');
+const themeToggle  = $('themeToggleBtn');
+const themeIcon    = $('themeIcon');
 
-  const popover = document.getElementById('locationPopover');
-  const mapPickerModal = document.getElementById('mapPickerModal');
-  let pickerMap = null, pickerMarker = null;
-  let pendingLat = 21.4225, pendingLng = 39.8262;
-  let map = null, marker = null;
+const arabicNames = {
+  Fajr:'الفجر', Sunrise:'الشروق', Dhuhr:'الظهر',
+  Asr:'العصر', Maghrib:'المغرب', Isha:'العشاء'
+};
 
-  function showLoader(show, text = 'Loading...') {
-    if (show) {
-      document.querySelector('#globalLoader .spinner').textContent = text;
-      globalLoader.classList.add('active');
-    } else {
-      globalLoader.classList.remove('active');
+const pad = n => String(n).padStart(2,'0');
+
+function formatTime(d) {
+  if (!d || isNaN(d.getTime())) return '--:--';
+  return d.toLocaleTimeString([], { hour:'2-digit', minute:'2-digit', hour12:true });
+}
+
+/* ── Theme ── */
+const stored = localStorage.getItem('noor_theme');
+let isDark = stored ? stored === 'dark' : false; // light preferred first
+applyTheme(isDark);
+
+function applyTheme(dark) {
+  document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+  themeIcon.textContent = dark ? '☀️' : '🌙';
+  isDark = dark;
+}
+
+themeToggle.addEventListener('click', () => {
+  isDark = !isDark;
+  applyTheme(isDark);
+  localStorage.setItem('noor_theme', isDark ? 'dark' : 'light');
+});
+
+/* ── Loader & Toast ── */
+function showLoader(show, txt = 'Loading…') {
+  loaderMsg.textContent = txt;
+  loaderEl.classList.toggle('is-active', show);
+}
+
+function toast(msg, ms = 3200) {
+  toastEl.textContent = msg;
+  toastEl.classList.add('is-show');
+  setTimeout(() => toastEl.classList.remove('is-show'), ms);
+}
+
+/* ── Clock ── */
+function tickClock() {
+  navClock.textContent = new Date().toLocaleTimeString([],
+    { hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:true });
+}
+setInterval(tickClock, 1000);
+tickClock();
+
+/* ── Params ── */
+function buildParams(method, madhab) {
+  const map = {
+    UmmAlQura: CalculationMethod.UmmAlQura,
+    MuslimWorldLeague: CalculationMethod.MuslimWorldLeague,
+    Egyptian: CalculationMethod.Egyptian,
+    Karachi: CalculationMethod.Karachi,
+    MoonsightingCommittee: CalculationMethod.MoonsightingCommittee,
+    NorthAmerica: CalculationMethod.NorthAmerica,
+    Kuwait: CalculationMethod.Kuwait,
+    Qatar: CalculationMethod.Qatar,
+    Singapore: CalculationMethod.Singapore
+  };
+  const p = (map[method] || CalculationMethod.UmmAlQura)();
+  p.madhab = madhab === 'Hanafi' ? Madhab.Hanafi : Madhab.Shafi;
+  return p;
+}
+
+function getSelectedDate() {
+  if (dateInput.value) {
+    const [y,m,d] = dateInput.value.split('-').map(Number);
+    return new Date(y, m-1, d);
+  }
+  const n = new Date();
+  return new Date(n.getFullYear(), n.getMonth(), n.getDate());
+}
+
+/* ── Full refresh ── */
+function fullRefresh() {
+  if (!window._locationReady) return;
+  const lat = parseFloat(latInput.value);
+  const lon = parseFloat(lonInput.value);
+  if (isNaN(lat) || isNaN(lon)) return;
+
+  const coords = new Coordinates(lat, lon);
+  const params = buildParams(methodSel.value, madhabSel.value);
+  const dateObj = getSelectedDate();
+
+  const pt = new PrayerTimes(coords, dateObj, params);
+  window._cachedCoords = coords;
+  window._cachedParams = params;
+
+  const today = new Date();
+  const todayDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  window._todayTimes = new PrayerTimes(coords, todayDate, buildParams(methodSel.value, madhabSel.value));
+
+  // Nav method label
+  const methodLabels = {
+    UmmAlQura:'Umm al-Qura', MuslimWorldLeague:'MWL',
+    Egyptian:'Egyptian', Karachi:'Karachi',
+    MoonsightingCommittee:'Moonsighting', NorthAmerica:'ISNA',
+    Kuwait:'Kuwait', Qatar:'Qatar', Singapore:'Singapore'
+  };
+  navMethod.textContent = methodLabels[methodSel.value] || 'Umm al-Qura';
+
+  // Active prayer detection
+  const PRAYERS = ['Fajr','Sunrise','Dhuhr','Asr','Maghrib','Isha'];
+  const now = new Date();
+  let active = null;
+  for (let i = PRAYERS.length - 1; i >= 0; i--) {
+    const t = pt[PRAYERS[i].toLowerCase()];
+    if (t && now >= t) { active = PRAYERS[i]; break; }
+  }
+
+  // Prayer grid
+  prayerGrid.innerHTML = '';
+  PRAYERS.forEach(p => {
+    const t = pt[p.toLowerCase()];
+    const cell = document.createElement('div');
+    cell.className = 'prayer-cell' + (p === active ? ' is-active' : '');
+    cell.setAttribute('role', 'listitem');
+    cell.setAttribute('aria-label', `${p}: ${formatTime(t)}`);
+    cell.innerHTML = `<span class="pcell-name">${p}</span><span class="pcell-time">${formatTime(t)}</span>`;
+    prayerGrid.appendChild(cell);
+  });
+
+  // Qibla & Sunnah
+  $('qiblaDeg').textContent = `${Math.round(Qibla(coords))}°`;
+  try {
+    const sunnah = new SunnahTimes(pt);
+    $('lastThird').textContent = formatTime(sunnah.lastThirdOfTheNight);
+    $('midNight').textContent = formatTime(sunnah.middleOfTheNight);
+  } catch(e) {}
+
+  // Map update
+  if (!isNaN(lat) && !isNaN(lon)) {
+    if (!map) initMainMap(lat, lon);
+    else if (mapMarker) {
+      mapMarker.setLatLng([lat, lon]);
+      map.setView([lat, lon], map.getZoom());
     }
   }
 
-  function showToast(msg, duration = 3000) {
-    toastDiv.textContent = msg;
-    toastDiv.classList.add('show');
-    setTimeout(() => toastDiv.classList.remove('show'), duration);
-  }
+  startCountdown();
+}
 
-  function formatTime(date) {
-    if (!date || isNaN(date.getTime())) return '--:--';
-    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
-  }
-
-  function getCurrentParams() {
-    let lat = parseFloat(latInput.value);
-    let lon = parseFloat(lonInput.value);
-    if (isNaN(lat) || isNaN(lon)) { lat = 21.4225; lon = 39.8262; latInput.value = lat; lonInput.value = lon; }
-    const coords = new Coordinates(lat, lon);
-    let selectedDate = new Date();
-    if (datePicker.value) {
-      const parts = datePicker.value.split('-');
-      selectedDate = new Date(parseInt(parts[0]), parseInt(parts[1])-1, parseInt(parts[2]));
-    } else {
-      const today = new Date();
-      datePicker.value = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
-      selectedDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-    }
-    return { coords, dateObj: selectedDate };
-  }
-
-  function getCalculationParams(methodKey, madhabKey) {
-    let params;
-    switch (methodKey) {
-      case 'UmmAlQura': params = CalculationMethod.UmmAlQura(); break;
-      case 'MuslimWorldLeague': params = CalculationMethod.MuslimWorldLeague(); break;
-      case 'Egyptian': params = CalculationMethod.Egyptian(); break;
-      case 'Karachi': params = CalculationMethod.Karachi(); break;
-      case 'MoonsightingCommittee': params = CalculationMethod.MoonsightingCommittee(); break;
-      case 'NorthAmerica': params = CalculationMethod.NorthAmerica(); break;
-      case 'Kuwait': params = CalculationMethod.Kuwait(); break;
-      case 'Qatar': params = CalculationMethod.Qatar(); break;
-      case 'Singapore': params = CalculationMethod.Singapore(); break;
-      default: params = CalculationMethod.UmmAlQura();
-    }
-    if (madhabKey === 'Hanafi') params.madhab = Madhab.Hanafi;
-    else params.madhab = Madhab.Shafi;
-    return params;
-  }
-
-  function fullRefresh() {
-    if (!window._locationReady) return;
-    const { coords, dateObj } = getCurrentParams();
-    const params = getCalculationParams(methodSelect.value, madhabSelect.value);
-    const prayerTimes = new PrayerTimes(coords, dateObj, params);
-    window._cachedPrayerTimes = prayerTimes;
-    window._cachedCoords = coords;
-    window._cachedParams = params;
-    window._cachedDate = dateObj;
-
-    const prayers = ['Fajr','Sunrise','Dhuhr','Asr','Maghrib','Isha'];
-    prayerGrid.innerHTML = '';
-    prayers.forEach(p => {
-      const time = prayerTimes[p.toLowerCase()];
-      const card = document.createElement('div');
-      card.className = 'prayer-card';
-      card.innerHTML = `<div class="prayer-name">${p}</div><div class="prayer-time">${formatTime(time)}</div>`;
-      prayerGrid.appendChild(card);
-    });
-    const qiblaDir = Qibla(coords);
-    qiblaDegSpan.innerText = `${Math.round(qiblaDir)}°`;
-    try {
-      const sunnah = new SunnahTimes(prayerTimes);
-      lastThirdSpan.innerText = formatTime(sunnah.lastThirdOfTheNight);
-      midNightSpan.innerText = formatTime(sunnah.middleOfTheNight);
-    } catch(e) {}
-
-    const clat = parseFloat(latInput.value), clng = parseFloat(lonInput.value);
-    if (!isNaN(clat) && !isNaN(clng)) {
-      if (map && marker) {
-        marker.setLatLng([clat, clng]);
-        map.setView([clat, clng], map.getZoom());
-      } else if (!map) {
-        initMainMap(clat, clng);
-      } else if (map && !marker) {
-        marker = L.marker([clat, clng], { draggable: true }).addTo(map);
-        attachMarkerDrag();
-        map.setView([clat, clng], map.getZoom());
-      }
-    }
-    startCountdownTimer();
-  }
-
-  function attachMarkerDrag() {
-    if(marker) marker.on('dragend', () => {
-      latInput.value = marker.getLatLng().lat.toFixed(6);
-      lonInput.value = marker.getLatLng().lng.toFixed(6);
-      fullRefresh();
-    });
-  }
-
-  function initMainMap(lat, lng) {
-    if (map) return;
-    map = L.map('locationMap').setView([lat, lng], 12);
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-      attribution: '&copy; OSM & CartoDB', subdomains: 'abcd'
-    }).addTo(map);
-    marker = L.marker([lat, lng], { draggable: true }).addTo(map);
-    attachMarkerDrag();
-    map.on('click', e => {
-      latInput.value = e.latlng.lat.toFixed(6);
-      lonInput.value = e.latlng.lng.toFixed(6);
-      fullRefresh();
-    });
-  }
-
-  function getNextPrayerDateTime() {
-    if (!window._cachedPrayerTimes) return null;
-    const today = window._cachedPrayerTimes;
-    const now = new Date();
-    const entries = [
-      { name: 'Fajr', time: today.fajr }, { name: 'Sunrise', time: today.sunrise },
-      { name: 'Dhuhr', time: today.dhuhr }, { name: 'Asr', time: today.asr },
-      { name: 'Maghrib', time: today.maghrib }, { name: 'Isha', time: today.isha }
-    ];
-    let upcoming = entries.filter(e => e.time && e.time > now);
-    if (upcoming.length) return upcoming[0];
-    const tomorrow = new Date(window._cachedDate);
-    tomorrow.setDate(tomorrow.getDate()+1);
-    const tomorrowTimes = new PrayerTimes(window._cachedCoords, tomorrow, window._cachedParams);
-    return { name: 'Fajr', time: tomorrowTimes.fajr };
-  }
-
-  let countdownInterval;
-  function updateCountdown() {
-    if (!window._cachedPrayerTimes) return;
-    const next = getNextPrayerDateTime();
-    if(next && next.time) {
-      const diff = Math.max(0, next.time - new Date());
-      const h = Math.floor(diff/3600000), m = Math.floor((diff%3600000)/60000), s = Math.floor((diff%60000)/1000);
-      countdownSpan.innerText = `${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
-      nextPrayerNameSpan.innerText = next.name;
-    }
-    let current = '—';
-    if (window._cachedPrayerTimes) {
-      const now = new Date();
-      const order = ['Fajr','Sunrise','Dhuhr','Asr','Maghrib','Isha'];
-      for (let p of order) {
-        if (window._cachedPrayerTimes[p.toLowerCase()] && now >= window._cachedPrayerTimes[p.toLowerCase()]) current = p;
-      }
-      if (!current && now < window._cachedPrayerTimes.fajr) current = 'Fajr';
-      else if (current === 'Isha' && now >= window._cachedPrayerTimes.isha) current = 'Isha';
-    }
-    currentPrayerTextSpan.innerText = current !== '—' ? `✨ Current: ${current}` : '✨ —';
-  }
-
-  function startCountdownTimer() {
-    if(countdownInterval) clearInterval(countdownInterval);
-    updateCountdown();
-    countdownInterval = setInterval(updateCountdown, 1000);
-  }
-
-  async function reverseGeocode(lat, lng) {
-    try {
-      const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=10`);
-      const data = await res.json();
-      return data.address?.city || data.address?.town || data.address?.village || data.display_name?.split(',')[0] || 'Location';
-    } catch(e) { return 'Selected area'; }
-  }
-
-  async function setLocation(lat, lng, saveToStorage = true, showSuccessToast = true) {
-    latInput.value = lat.toFixed(6);
-    lonInput.value = lng.toFixed(6);
-
-    const city = await reverseGeocode(lat, lng);
-    currentCityName.textContent = city || 'Unknown location';
-    currentCityName.title = city;
-
-    if (saveToStorage) {
-      localStorage.setItem('noor_lat', lat);
-      localStorage.setItem('noor_lng', lng);
-      localStorage.setItem('noor_city', city);
-      if (showSuccessToast) showToast(`📍 Location set to ${city}`);
-    }
-    window._locationReady = true;
+/* ── Map ── */
+function initMainMap(lat, lng) {
+  if (map) return;
+  const tile = isDark
+    ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
+    : 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png';
+  map = L.map('locationMap').setView([lat, lng], 12);
+  L.tileLayer(tile, { attribution:'© OSM & CartoDB', subdomains:'abcd' }).addTo(map);
+  mapMarker = L.marker([lat, lng], { draggable:true }).addTo(map);
+  mapMarker.on('dragend', () => {
+    const p = mapMarker.getLatLng();
+    latInput.value = p.lat.toFixed(6);
+    lonInput.value = p.lng.toFixed(6);
     fullRefresh();
+  });
+  map.on('click', e => {
+    latInput.value = e.latlng.lat.toFixed(6);
+    lonInput.value = e.latlng.lng.toFixed(6);
+    fullRefresh();
+  });
+}
+
+/* ── Banner ── */
+function getCurrentPrayer() {
+  if (!window._todayTimes) return null;
+  const now = new Date();
+  const order = ['Fajr','Sunrise','Dhuhr','Asr','Maghrib','Isha'];
+  for (let i = order.length - 1; i >= 0; i--) {
+    const t = window._todayTimes[order[i].toLowerCase()];
+    if (t && now >= t) return { name: order[i], start: t };
+  }
+  return null;
+}
+
+function getNextPrayer() {
+  if (!window._todayTimes) return null;
+  const now = new Date();
+  const entries = [
+    { name:'Fajr',    time: window._todayTimes.fajr },
+    { name:'Sunrise', time: window._todayTimes.sunrise },
+    { name:'Dhuhr',   time: window._todayTimes.dhuhr },
+    { name:'Asr',     time: window._todayTimes.asr },
+    { name:'Maghrib', time: window._todayTimes.maghrib },
+    { name:'Isha',    time: window._todayTimes.isha }
+  ];
+  const upcoming = entries.filter(e => e.time && e.time > now);
+  if (upcoming.length) return upcoming[0];
+  if (window._cachedCoords && window._cachedParams) {
+    const tom = new Date(); tom.setDate(tom.getDate() + 1);
+    const tomDate = new Date(tom.getFullYear(), tom.getMonth(), tom.getDate());
+    const tomTimes = new PrayerTimes(window._cachedCoords, tomDate, window._cachedParams);
+    return { name:'Fajr', time: tomTimes.fajr };
+  }
+  return null;
+}
+
+function updateBanner() {
+  if (!window._todayTimes) return;
+  const current = getCurrentPrayer();
+  if (current) {
+    $('nowPrayer').textContent = current.name;
+    $('nowArabic').textContent = arabicNames[current.name] || '';
+    const elapsedMin = Math.floor((new Date() - current.start) / 60000);
+    if (elapsedMin < 1) $('elapsedText').textContent = 'just started';
+    else if (elapsedMin < 60) $('elapsedText').textContent = `${elapsedMin}m elapsed`;
+    else $('elapsedText').textContent = `${Math.floor(elapsedMin/60)}h ${elapsedMin%60}m elapsed`;
+  } else {
+    $('nowPrayer').textContent = '—';
+    $('nowArabic').textContent = '—';
+    $('elapsedText').textContent = '—';
   }
 
-  // ====== UPDATED IP FALLBACK USING FREEIPAPI ======
-  async function useIPFallback(shouldClosePopover = false) {
-    showLoader(true, '🌐 Detecting location via IP...');
-    try {
-      // FreeIPAPI – free, no key required
-      const resp = await fetch('https://free.freeipapi.com/api/json/');
-      const data = await resp.json();
-      if (data.latitude && data.longitude) {
-        const city = data.cityName || data.regionName || 'Unknown';
-        await setLocation(data.latitude, data.longitude, true, true);
-        showToast(`📍 Location set via IP: ${city}`);
-      } else {
-        throw new Error('IP API incomplete');
-      }
-    } catch(e) {
-      console.warn("IP fallback failed, using default Makkah");
-      await setLocation(21.4225, 39.8262, true, true);
-      showToast("Using Makkah (Umm al‑Qura) as default location");
-    }
-    showLoader(false);
-    if (shouldClosePopover) closePopover();
+  const next = getNextPrayer();
+  if (next && next.time) {
+    $('nextPrayerName').textContent = next.name;
+    $('nextPrayerAt').textContent = formatTime(next.time);
+    const diff = Math.max(0, next.time - new Date());
+    $('cdH').textContent = pad(Math.floor(diff / 3600000));
+    $('cdM').textContent = pad(Math.floor((diff % 3600000) / 60000));
+    $('cdS').textContent = pad(Math.floor((diff % 60000) / 1000));
   }
+}
 
-  async function useGPS() {
-    showLoader(true, '📍 Getting your GPS location...');
-    if (!navigator.geolocation) {
-      showLoader(false);
-      showToast("Geolocation not supported. Trying IP location...");
-      await useIPFallback(true);
-      return;
-    }
-    navigator.geolocation.getCurrentPosition(async (pos) => {
+function startCountdown() {
+  if (countdownInterval) clearInterval(countdownInterval);
+  updateBanner();
+  countdownInterval = setInterval(updateBanner, 1000);
+}
+
+/* ── Geocoding ── */
+async function reverseGeocode(lat, lng) {
+  try {
+    const r = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=10`);
+    const d = await r.json();
+    return d.address?.city || d.address?.town || d.address?.village || d.display_name?.split(',')[0] || 'Location';
+  } catch { return 'Selected area'; }
+}
+
+async function setLocation(lat, lng, save = true, showToast = true) {
+  latInput.value = lat.toFixed(6);
+  lonInput.value = lng.toFixed(6);
+  const city = await reverseGeocode(lat, lng);
+  locCityName.textContent = city;
+  navCity.textContent = city;
+  if (save) {
+    localStorage.setItem('noor_lat', lat);
+    localStorage.setItem('noor_lng', lng);
+    localStorage.setItem('noor_city', city);
+    if (showToast) toast(`📍 Location set: ${city}`);
+  }
+  window._locationReady = true;
+  fullRefresh();
+}
+
+/* ── IP fallback ── */
+async function useIPFallback(closeAfter = false) {
+  showLoader(true, '🌐 Detecting via IP…');
+  try {
+    const r = await fetch('https://free.freeipapi.com/api/json/');
+    const d = await r.json();
+    if (d.latitude && d.longitude) {
+      await setLocation(d.latitude, d.longitude, true, false);
+      toast(`📍 IP location: ${d.cityName || d.regionName || 'Detected'}`);
+    } else throw new Error();
+  } catch {
+    await setLocation(21.4225, 39.8262, true, false);
+    toast('Using Makkah as default');
+  }
+  showLoader(false);
+  if (closeAfter) closePopover();
+}
+
+/* ── GPS ── */
+async function useGPS() {
+  showLoader(true, '📍 Getting GPS location…');
+  if (!navigator.geolocation) { showLoader(false); await useIPFallback(true); return; }
+  navigator.geolocation.getCurrentPosition(
+    async pos => {
       await setLocation(pos.coords.latitude, pos.coords.longitude, true, true);
       showLoader(false);
       closePopover();
-    }, async (err) => {
+    },
+    async () => {
       showLoader(false);
-      console.warn("GPS error:", err);
-      showToast("GPS access denied or failed. Trying IP location...");
+      toast('GPS denied — trying IP…');
       await useIPFallback(true);
-    });
-  }
-
-  function closePopover() { popover.classList.remove('active'); }
-  function openPopover() { popover.classList.add('active'); }
-  function closePicker() { mapPickerModal.classList.remove('active'); if(pickerMap) pickerMap.remove(); pickerMap = null; }
-  function openPicker() {
-    mapPickerModal.classList.add('active');
-    setTimeout(() => {
-      if (!pickerMap) initPickerMap(pendingLat, pendingLng);
-      else pickerMap.invalidateSize();
-    }, 50);
-  }
-
-  function initPickerMap(lat, lng) {
-    const container = document.getElementById('pickerMap');
-    if (!container) return;
-    if (pickerMap) pickerMap.remove();
-    pickerMap = L.map(container).setView([lat, lng], 12);
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { subdomains: 'abcd' }).addTo(pickerMap);
-    pickerMarker = L.marker([lat, lng], { draggable: true }).addTo(pickerMap);
-    pickerMarker.on('dragend', () => { const pos = pickerMarker.getLatLng(); pendingLat = pos.lat; pendingLng = pos.lng; });
-    pickerMap.on('click', e => { pickerMarker.setLatLng(e.latlng); pendingLat = e.latlng.lat; pendingLng = e.latlng.lng; });
-  }
-
-  async function confirmMapPick() {
-    if (pickerMarker) {
-      const pos = pickerMarker.getLatLng();
-      await setLocation(pos.lat, pos.lng, true, true);
-      closePicker();
-      closePopover();
     }
-  }
+  );
+}
 
-  document.querySelectorAll('[data-action="gps"]').forEach(el => el.addEventListener('click', useGPS));
-  document.querySelectorAll('[data-action="map"]').forEach(el => el.addEventListener('click', () => {
-    closePopover();
-    pendingLat = parseFloat(latInput.value) || 21.4225;
-    pendingLng = parseFloat(lonInput.value) || 39.8262;
-    openPicker();
-  }));
-  document.getElementById('popoverSkip')?.addEventListener('click', async () => { await useIPFallback(true); });
-  document.getElementById('pickerBackBtn')?.addEventListener('click', () => { closePicker(); openPopover(); });
-  document.getElementById('confirmPickerBtn')?.addEventListener('click', confirmMapPick);
+/* ── Popover ── */
+function closePopover() { popover.classList.remove('is-open'); }
+function openPopover()  { popover.classList.add('is-open'); }
 
-  manualChangeBtn.addEventListener('click', () => {
-    localStorage.removeItem('noor_lat');
-    localStorage.removeItem('noor_lng');
-    localStorage.removeItem('noor_city');
-    window._locationReady = false;
-    nextPrayerNameSpan.innerText = 'Set location';
-    countdownSpan.innerText = '--:--:--';
-    currentPrayerTextSpan.innerText = '📍 Allow location to start';
-    prayerGrid.innerHTML = '';
-    const dummy = Array(6).fill('<div class="prayer-card"><div class="prayer-name">—</div><div class="prayer-time">—</div></div>');
-    prayerGrid.innerHTML = dummy.join('');
-    qiblaDegSpan.innerText = '--°';
-    lastThirdSpan.innerText = '--:--';
-    midNightSpan.innerText = '--:--';
-    currentCityName.textContent = 'Detecting...';
-    openPopover();
+function closePicker() {
+  pickerModal.classList.remove('is-open');
+  if (pickerMap) { pickerMap.remove(); pickerMap = null; }
+}
+
+function openPicker() {
+  pickerModal.classList.add('is-open');
+  setTimeout(() => {
+    if (!pickerMap) initPickerMap(pendingLat, pendingLng);
+    else pickerMap.invalidateSize();
+  }, 60);
+}
+
+function initPickerMap(lat, lng) {
+  const container = $('pickerMap');
+  if (!container) return;
+  if (pickerMap) pickerMap.remove();
+  const tile = isDark
+    ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
+    : 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png';
+  pickerMap = L.map(container).setView([lat, lng], 12);
+  L.tileLayer(tile, { subdomains:'abcd' }).addTo(pickerMap);
+  pickerMarker = L.marker([lat, lng], { draggable:true }).addTo(pickerMap);
+  pickerMarker.on('dragend', () => {
+    const p = pickerMarker.getLatLng();
+    pendingLat = p.lat; pendingLng = p.lng;
   });
+  pickerMap.on('click', e => {
+    pickerMarker.setLatLng(e.latlng);
+    pendingLat = e.latlng.lat; pendingLng = e.latlng.lng;
+  });
+}
 
-  async function initialLocationFlow() {
-    const savedLat = localStorage.getItem('noor_lat');
-    const savedLng = localStorage.getItem('noor_lng');
-    const savedCity = localStorage.getItem('noor_city');
-    if (savedLat && savedLng && !isNaN(parseFloat(savedLat))) {
-      currentCityName.textContent = savedCity || 'Saved location';
-      await setLocation(parseFloat(savedLat), parseFloat(savedLng), false, true);
-    } else {
-      openPopover();
-    }
+/* ── Event listeners ── */
+document.querySelectorAll('[data-action="gps"]').forEach(el => el.addEventListener('click', useGPS));
+document.querySelectorAll('[data-action="map"]').forEach(el => el.addEventListener('click', () => {
+  closePopover();
+  pendingLat = parseFloat(latInput.value) || 21.4225;
+  pendingLng = parseFloat(lonInput.value) || 39.8262;
+  openPicker();
+}));
+
+$('popoverSkip')?.addEventListener('click', () => useIPFallback(true));
+$('pickerBack')?.addEventListener('click', () => { closePicker(); openPopover(); });
+$('confirmPick')?.addEventListener('click', async () => {
+  if (pickerMarker) {
+    const p = pickerMarker.getLatLng();
+    await setLocation(p.lat, p.lng, true, true);
+    closePicker(); closePopover();
   }
+});
 
-  let searchTimeout;
-  searchInput.addEventListener('input', (e) => {
-    clearTimeout(searchTimeout);
-    searchTimeout = setTimeout(async () => {
-      const q = e.target.value.trim();
-      if (!q) { suggestionsDiv.style.display = 'none'; return; }
-      const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}&limit=5`);
-      const data = await res.json();
-      suggestionsDiv.innerHTML = '';
+// Close overlays on backdrop click
+document.querySelectorAll('.overlay-backdrop').forEach(bd => {
+  bd.addEventListener('click', () => {
+    if (popover.classList.contains('is-open')) closePopover();
+    if (pickerModal.classList.contains('is-open')) closePicker();
+  });
+});
+
+changeLocBtn.addEventListener('click', () => {
+  localStorage.removeItem('noor_lat'); localStorage.removeItem('noor_lng'); localStorage.removeItem('noor_city');
+  window._locationReady = false;
+  ['nowPrayer','nowArabic','elapsedText','nextPrayerName','nextPrayerAt','qiblaDeg','lastThird','midNight'].forEach(id => {
+    const el = $(id); if (el) el.textContent = '—';
+  });
+  ['cdH','cdM','cdS'].forEach(id => { const el=$(id); if(el) el.textContent='--'; });
+  prayerGrid.innerHTML = Array(6).fill('<div class="prayer-cell"><span class="pcell-name">—</span><span class="pcell-time">—</span></div>').join('');
+  locCityName.textContent = 'Detecting…'; navCity.textContent = 'Detecting…';
+  openPopover();
+});
+
+gpsBtn.addEventListener('click', async () => {
+  showLoader(true, '📍 Getting GPS…');
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      async pos => { await setLocation(pos.coords.latitude, pos.coords.longitude, true); showLoader(false); },
+      async () => { showLoader(false); toast('GPS failed, trying IP…'); await useIPFallback(false); }
+    );
+  } else { showLoader(false); await useIPFallback(false); }
+});
+
+applyBtn.addEventListener('click', () => fullRefresh());
+
+// Search
+let searchTimeout;
+searchInput.addEventListener('input', e => {
+  clearTimeout(searchTimeout);
+  searchTimeout = setTimeout(async () => {
+    const q = e.target.value.trim();
+    if (!q) { sugDrop.style.display = 'none'; return; }
+    try {
+      const r = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}&limit=5`);
+      const data = await r.json();
+      sugDrop.innerHTML = '';
       if (data.length) {
         data.forEach(place => {
-          const div = document.createElement('div'); div.className = 'suggestion-item';
-          div.textContent = place.display_name.substring(0,55);
-          div.onclick = () => { setLocation(parseFloat(place.lat), parseFloat(place.lon), true); suggestionsDiv.style.display = 'none'; searchInput.value = place.display_name; };
-          suggestionsDiv.appendChild(div);
+          const div = document.createElement('div');
+          div.className = 'sug-item';
+          div.textContent = place.display_name.substring(0, 60);
+          div.setAttribute('role', 'option');
+          div.setAttribute('tabindex', '0');
+          const selectPlace = () => {
+            setLocation(parseFloat(place.lat), parseFloat(place.lon), true);
+            sugDrop.style.display = 'none';
+            searchInput.value = place.display_name.split(',')[0];
+          };
+          div.addEventListener('click', selectPlace);
+          div.addEventListener('keydown', e => { if (e.key === 'Enter') selectPlace(); });
+          sugDrop.appendChild(div);
         });
-        suggestionsDiv.style.display = 'block';
-      } else suggestionsDiv.style.display = 'none';
-    }, 400);
-  });
-  searchBtn.onclick = () => searchInput.dispatchEvent(new Event('input'));
-  document.addEventListener('click', (e) => { if (!suggestionsDiv.contains(e.target) && e.target !== searchInput) suggestionsDiv.style.display = 'none'; });
+        sugDrop.style.display = 'block';
+      } else { sugDrop.style.display = 'none'; }
+    } catch {}
+  }, 420);
+});
 
-  applyBtn.addEventListener('click', () => fullRefresh());
-  geolocBtn.addEventListener('click', async () => {
-    showLoader(true, '📍 Getting GPS...');
-    if(navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(async pos => {
-        await setLocation(pos.coords.latitude, pos.coords.longitude, true);
-        showLoader(false);
-      }, async () => {
-        showLoader(false);
-        showToast("GPS failed, trying IP...");
-        await useIPFallback(false);
-      });
-    } else {
-      showLoader(false);
-      showToast("GPS not supported, trying IP...");
-      await useIPFallback(false);
-    }
-  });
-  latInput.addEventListener('change', () => fullRefresh());
-  lonInput.addEventListener('change', () => fullRefresh());
-  datePicker.addEventListener('change', () => fullRefresh());
-  methodSelect.addEventListener('change', () => fullRefresh());
-  madhabSelect.addEventListener('change', () => fullRefresh());
+searchBtn.addEventListener('click', () => searchInput.dispatchEvent(new Event('input')));
+document.addEventListener('click', e => {
+  if (!sugDrop.contains(e.target) && e.target !== searchInput) sugDrop.style.display = 'none';
+});
 
-  function init() {
-    const today = new Date();
-    datePicker.value = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
-    methodSelect.value = "UmmAlQura";
-    initMainMap(21.4225, 39.8262);
-    initialLocationFlow();
+[latInput, lonInput].forEach(el => el.addEventListener('change', fullRefresh));
+[dateInput, methodSel, madhabSel].forEach(el => el.addEventListener('change', fullRefresh));
+
+/* ── Init ── */
+async function init() {
+  const today = new Date();
+  dateInput.value = `${today.getFullYear()}-${pad(today.getMonth()+1)}-${pad(today.getDate())}`;
+  initMainMap(21.4225, 39.8262);
+
+  const sLat = localStorage.getItem('noor_lat');
+  const sLng = localStorage.getItem('noor_lng');
+  const sCity = localStorage.getItem('noor_city');
+
+  if (sLat && !isNaN(parseFloat(sLat))) {
+    locCityName.textContent = sCity || 'Saved location';
+    navCity.textContent = sCity || 'Saved';
+    await setLocation(parseFloat(sLat), parseFloat(sLng), false, false);
+  } else {
+    openPopover();
   }
-  init();
+}
+
+init();
 </script>
 </body>
 </html>
