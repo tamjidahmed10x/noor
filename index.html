@@ -6,6 +6,33 @@
       name="viewport"
       content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover"
     />
+    <meta
+      name="description"
+      content="Noor Prayer Times offers accurate location-aware prayer times, qibla direction, and daily prayer schedules."
+    />
+    <meta property="og:title" content="Noor · Prayer Times" />
+    <meta
+      property="og:description"
+      content="Accurate prayer times, qibla direction, and daily prayer schedule for your location."
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="./index.html" />
+    <meta property="og:image" content="./icon.svg" />
+    <meta property="og:image:type" content="image/svg+xml" />
+    <meta property="og:image:alt" content="Noor Prayer Times app icon" />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="Noor · Prayer Times" />
+    <meta
+      name="twitter:description"
+      content="Accurate prayer times, qibla direction, and daily prayer schedule for your location."
+    />
+    <meta name="twitter:image" content="./icon.svg" />
+    <meta name="theme-color" content="#b8892f" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="Noor" />
+    <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
+    <link rel="manifest" href="./manifest.webmanifest" />
     <title>Noor · Prayer Times</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -2038,6 +2065,16 @@
         if (!d.contains(e.target) && e.target !== $("locSearch"))
           d.style.display = "none";
       });
+
+      /* ── PWA ── */
+      if (
+        "serviceWorker" in navigator &&
+        (window.isSecureContext || /^(localhost|127\.0\.0\.1)$/.test(location.hostname))
+      ) {
+        window.addEventListener("load", () => {
+          navigator.serviceWorker.register("./sw.js").catch(() => {});
+        });
+      }
 
       /* ── Init ── */
       async function init() {
