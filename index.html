@@ -16,8 +16,14 @@
       content="Accurate prayer times, qibla direction, and daily prayer schedule for your location."
     />
     <meta property="og:type" content="website" />
-    <meta property="og:url" content="./index.html" />
-    <meta property="og:image" content="./icon.svg" />
+    <meta
+      property="og:url"
+      content="https://noor-flame.vercel.app/index.html"
+    />
+    <meta
+      property="og:image"
+      content="https://noor-flame.vercel.app/preview.svg"
+    />
     <meta property="og:image:type" content="image/svg+xml" />
     <meta property="og:image:alt" content="Noor Prayer Times app icon" />
     <meta name="twitter:card" content="summary" />
@@ -26,7 +32,10 @@
       name="twitter:description"
       content="Accurate prayer times, qibla direction, and daily prayer schedule for your location."
     />
-    <meta name="twitter:image" content="./icon.svg" />
+    <meta
+      name="twitter:image"
+      content="https://noor-flame.vercel.app/preview.svg"
+    />
     <meta name="theme-color" content="#b8892f" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
@@ -2069,7 +2078,8 @@
       /* ── PWA ── */
       if (
         "serviceWorker" in navigator &&
-        (window.isSecureContext || /^(localhost|127\.0\.0\.1)$/.test(location.hostname))
+        (window.isSecureContext ||
+          /^(localhost|127\.0\.0\.1)$/.test(location.hostname))
       ) {
         window.addEventListener("load", () => {
           navigator.serviceWorker.register("./sw.js").catch(() => {});
