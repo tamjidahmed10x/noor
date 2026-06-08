@@ -1,10 +1,12 @@
-const CACHE_NAME = "noor-static-v1";
+const CACHE_NAME = "noor-static-v2";
 const APP_SHELL = [
   "./",
   "./index.html",
+  "./noor.html",
   "./manifest.webmanifest",
   "./favicon.svg",
   "./icon.svg",
+  "./preview.svg",
 ];
 
 self.addEventListener("install", (event) => {
@@ -16,13 +18,15 @@ self.addEventListener("install", (event) => {
 
 self.addEventListener("activate", (event) => {
   event.waitUntil(
-    caches.keys().then((keys) =>
-      Promise.all(
-        keys
-          .filter((key) => key !== CACHE_NAME)
-          .map((key) => caches.delete(key)),
+    caches
+      .keys()
+      .then((keys) =>
+        Promise.all(
+          keys
+            .filter((key) => key !== CACHE_NAME)
+            .map((key) => caches.delete(key)),
+        ),
       ),
-    ),
   );
   self.clients.claim();
 });
@@ -41,7 +45,9 @@ self.addEventListener("fetch", (event) => {
           return response;
         }
         const responseClone = response.clone();
-        caches.open(CACHE_NAME).then((cache) => cache.put(event.request, responseClone));
+        caches
+          .open(CACHE_NAME)
+          .then((cache) => cache.put(event.request, responseClone));
         return response;
       });
     }),
